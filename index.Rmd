@@ -1,15 +1,20 @@
 ---
 title: "GSVA for SpatialExperiment class"
-output: html_document
+output: 
+  html_document:
+    css: bootstrap.css
+    toc: true
+    toc_float: true
 author: "Pere Moles"
 date: "2024-04-12"
+    
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warnings = FALSE)
 ```
 
-# LIBRARIES
+# Libraries
 
 ```{r}
 options(timeout=180)
@@ -18,23 +23,21 @@ library(openxlsx)
 library(dplyr)
 library(scran)
 library(scater)
-library(SpatialExperiment)
 library(TENxVisiumData)
 library(SpatialExperiment)
 library(SpatialFeatureExperiment)
 library(Voyager)
 library(patchwork)
 library(nnSVG)
-library(here)
 ```
 
-# LOAD DATA
+# Load Data
 ```{r}
 spe <- MouseBrainSagittalAnterior()
 spe <- spe[, colData(spe)$sample_id == "MouseBrainSagittalAnterior1"]
 ```
 
-# PREPROCESSING
+# Preprocessing
 ## QC
 
 Subset to keep only spots over tissue
@@ -114,14 +117,14 @@ spe <- spe[, !colData(spe)$discard]
 ```
 
 
-## NORMALIZATION
+## Normalization
 
 ```{r}
 spe <- computeLibraryFactors(spe)
 spe <- logNormCounts(spe)
 ```
 
-## FEATURE SELECTION
+## Feature selection 
 
 ```{r}
 spe <- spe[!is_mito, ]
@@ -183,12 +186,10 @@ saveRDS(spe, file="spe.rds")
 ```
 
 
-# LOAD GENE SETS
-
+# Load Gene Sets
 Cellmarker data from http://bio-bigdata.hrbmu.edu.cn/CellMarker/CellMarker_download.html
 ```{r}
 cellmarkers <- read.xlsx('Cell_marker_Mouse.xlsx', rowNames =F)
-cell_types <- cellmarkers %>% filter(tissue_class=='Brain' & cell_type=="Normal cell") %>%  select(cell_name)
 ```
 Extract Gene Set info from the xlsx file
 ```{r}
@@ -328,17 +329,4 @@ for (i in 1:length(corr_plots)){
 }
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
 
