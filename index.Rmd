@@ -1,5 +1,5 @@
 ---
-title: "GSVA for SpatialExperiment class"
+title: "GSVA for SpatialExperiment class: Mouse brain analysis"
 output: 
   html_document:
     css: bootstrap.css
@@ -29,6 +29,8 @@ library(SpatialFeatureExperiment)
 library(Voyager)
 library(patchwork)
 library(nnSVG)
+library(GSVA)
+library(BiocParallel)
 ```
 
 # Load Data
@@ -119,6 +121,8 @@ spe <- spe[, !colData(spe)$discard]
 
 ## Normalization
 
+Calculate log-transformed normalized counts (abbreviated as “logcounts”) using library size factors.
+
 ```{r}
 spe <- computeLibraryFactors(spe)
 spe <- logNormCounts(spe)
@@ -130,7 +134,7 @@ spe <- logNormCounts(spe)
 spe <- spe[!is_mito, ]
 ```
 
-Now, let's keep only highly variable genes.
+Now, we keep only highly variable genes.
 
 ```{r}
 # fit mean-variance relationship
@@ -152,21 +156,23 @@ curve(fit$trend(x), col = "dodgerblue", add = TRUE, lwd = 2)
 
 # Anatomical regions
 
-## Non-spatial clustering
+## Clustering
 
 #### PCA
 
+Compute PCA
 ```{r}
-# compute PCA
+
 set.seed(123)
 spe <- runPCA(spe, subset_row = top_hvgs)
 
 reducedDimNames(spe)
 ```
 
+Perform graph-based clustering
 
 ```{r}
-# graph-based clustering
+
 set.seed(123)
 k <- 28
 g <- buildSNNGraph(spe, k = k, use.dimred = "PCA")
@@ -175,14 +181,6 @@ clus <- g_walk$membership
 table(clus)
 colLabels(spe) <- factor(clus)
 
-```
-
-
-
-
-
-```{r}
-saveRDS(spe, file="spe.rds")
 ```
 
 
@@ -219,10 +217,6 @@ names(genesetlist) <- set_names
 genesetlist <- genesetlist[sapply(genesetlist, function(x) length(x) > 1)]
 ```
 
-```{r}
-saveRDS(genesetlist, file="RDS_files/genesets.rds")
-```
-
 
 ```{r}
 # Function  for comparison between GSVA scores and clusters
@@ -231,11 +225,11 @@ source("gsva_cluster_tests.R")
 
 # Read files
 
+SpatialExperiment object with GSVA scores.
 
 ```{r}
-# SpatialExperiment object with GSVA scores
-
-res <- readRDS("RDS_files/gsva_res.rds")
+gsvaPar <- gsvaParam(spe, genesetlist, assay = "logcounts", kcdf="none", minSize = 2)
+system.time(res <- gsva(gsvaPar,  BPPARAM=MulticoreParam(workers=4)))
 ```
 
 # Get spatially variable genesets
@@ -244,6 +238,7 @@ res <- readRDS("RDS_files/gsva_res.rds")
 
 ## GSVA SpatialFeatureExperiment object
 
+We coerce the SpatialExperiment object to SpatialFeatureExperiment object in order to use the package Voyager functionalities.
 
 ```{r}
 
@@ -282,14 +277,14 @@ cluster_plot <- plotVisium(spe,y_coord = "pxl_col_in_fullres", x_coord = "pxl_ro
 
 ```{r, out.width="300%"}
 for (i in 1:length(plot_list_hist_gsva)){
-    print(plot_list_hist_gsva[[i]]+cluster_plot)
+    print(plot_list_hist_gsva[[i]])
 }
 ```
 
 ## Compute NNSVG for GSVA scores
 
 ```{r}
-spe_nnSVG <- readRDS("RDS_files/nnsvg_res.rds")
+spe_nnSVG <- nnSVG(res, assay_name = "es", BPPARAM=MulticoreParam(workers=4))
 ```
 
 ```{r}
@@ -309,8 +304,8 @@ plot_list_hist_gsva_nnsvg <- lapply(top_nnSVG_genesets, function(x){
 
 ```{r, out.width="300%"}
 for (i in 1:length(plot_list_hist_gsva_nnsvg)){
-  print(plot_list_hist_gsva_nnsvg[i][[1]][[2]]+cluster_plot)
-  print(gsva_clusters_ttests(spe,res,plot_list_hist_gsva_nnsvg[i][[1]][[1]]))
+  print(plot_list_hist_gsva_nnsvg[i][[1]][[2]])
+  #print(gsva_clusters_ttests(spe,res,plot_list_hist_gsva_nnsvg[i][[1]][[1]]))
 }
 ```
 

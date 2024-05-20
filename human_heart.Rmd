@@ -1,0 +1,339 @@
+---
+title: "GSVA for SpatialExperiment class: Human Heart analysis"
+output: 
+  html_document:
+    css: bootstrap.css
+    toc: true
+    toc_float: true
+author: "Pere Moles"
+date: "2024-04-12"
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warnings = FALSE)
+```
+
+# Libraries
+
+```{r}
+options(timeout=180)
+library(ggspavis)
+library(openxlsx)
+library(dplyr)
+library(scran)
+library(scater)
+library(TENxVisiumData)
+library(SpatialExperiment)
+library(SpatialFeatureExperiment)
+library(Voyager)
+library(patchwork)
+library(nnSVG)
+library(GSVA)
+library(BiocParallel)
+```
+
+
+# HUMAN HEART ANALYSIS
+
+# Load Data
+```{r}
+spe <- HumanHeart()
+```
+
+# Preprocessing
+## QC
+
+Subset to keep only spots over tissue
+```{r}
+spe <- spe[, int_colData(spe)$spatialData$in_tissue == TRUE]
+```
+
+Identify mitochondrial genes
+```{r}
+is_mito <- grepl("(^MT-)|(^mt-)", rowData(spe)$symbol)
+spe <- addPerCellQC(spe, subsets = list(mito = is_mito))
+```
+
+Select QC thresholds
+sum: Library size (represents the total sum of UMI counts per spot).
+detected: The number of expressed features (refers to the number of genes with non-zero UMI counts per spot).
+subsets_mito_percent: A high proportion of mitochondrial reads indicates cell damage.
+
+To select the QC thresholds we first plot them and choose the thresholds visually.
+
+```{r}
+hist(colData(spe)$sum, breaks = 20, col = "skyblue", border = "white", 
+     xlab = "UMI Counts per Spot", ylab = "Frequency", 
+     main = "Distribution of UMI Counts per Spot")
+
+grid(col = "gray", lwd = 0.5)
+
+
+```
+
+```{r}
+hist(colData(spe)$detected, breaks = 20, col = "skyblue", border = "white", 
+     xlab = "Number of genes with non-zero UMI counts per spot", ylab = "Frequency", 
+     main = "Distribution of number of genes with non-zero UMI counts per spot")
+
+grid(col = "gray", lwd = 0.5)
+```
+
+
+```{r}
+hist(colData(spe)$subsets_mito_percent, breaks = 20, col = "skyblue", border = "white", 
+     xlab = "Percentage of mitochondrial reads", ylab = "Frequency", 
+     main = "Distribution of percentage of mitochondrial reads")
+
+grid(col = "gray", lwd = 0.5)
+
+```
+
+
+```{r}
+qc_lib_size <- colData(spe)$sum < 2000
+qc_detected <- colData(spe)$detected < 1000
+qc_mito <- colData(spe)$subsets_mito_percent > 50
+```
+
+Number of discarded spots for each metric
+```{r}
+apply(cbind(qc_lib_size, qc_detected, qc_mito), 2, sum)
+
+discard <- qc_lib_size | qc_detected | qc_mito
+table(discard)
+
+colData(spe)$discard <- discard
+```
+
+Plot discarded spots
+
+```{r}
+# check spatial pattern of combined set of discarded spots
+plotVisium(spe, x_coord = "pxl_row_in_fullres", y_coord = "pxl_col_in_fullres",
+           fill = "discard")
+```
+
+Filter low-quality spots
+```{r}
+spe <- spe[, !colData(spe)$discard]
+```
+
+
+## Normalization
+
+Calculate log-transformed normalized counts (abbreviated as “logcounts”) using library size factors.
+
+```{r}
+spe <- computeLibraryFactors(spe)
+spe <- logNormCounts(spe)
+```
+
+## Feature selection 
+
+```{r}
+spe <- spe[!is_mito, ]
+```
+
+Now, we keep only highly variable genes.
+
+```{r}
+# fit mean-variance relationship
+dec <- modelGeneVar(spe, assay.type = "logcounts")
+```
+
+```{r}
+# select top HVGs
+top_hvgs <- getTopHVGs(dec, prop = 0.9)
+spe <- spe[rownames(spe) %in% top_hvgs,]
+```
+
+```{r}
+fit <- metadata(dec)
+plot(fit$mean, fit$var, 
+     xlab = "mean of log-expression", ylab = "variance of log-expression")
+curve(fit$trend(x), col = "dodgerblue", add = TRUE, lwd = 2)
+```
+
+# Anatomical regions
+
+## Non-spatial clustering
+
+#### PCA
+
+Compute PCA
+```{r}
+
+set.seed(123)
+spe <- runPCA(spe, subset_row = top_hvgs)
+
+reducedDimNames(spe)
+```
+
+Perform graph-based clustering
+
+```{r}
+
+set.seed(123)
+k <- 28
+g <- buildSNNGraph(spe, k = k, use.dimred = "PCA")
+g_walk <- igraph::cluster_walktrap(g)
+clus <- g_walk$membership
+table(clus)
+colLabels(spe) <- factor(clus)
+
+```
+
+
+
+
+
+```{r}
+saveRDS(spe, file="RDS_files/spe.rds")
+```
+
+
+# Load Gene Sets
+Cellmarker data from http://bio-bigdata.hrbmu.edu.cn/CellMarker/CellMarker_download.html
+```{r}
+cellmarkers <- read.xlsx('Cell_marker_Human.xlsx', rowNames =F)
+```
+Extract Gene Set info from the xlsx file
+```{r}
+cell_types <- cellmarkers %>% filter(tissue_class=='Heart' & cell_type=="Normal cell") %>% dplyr::count(cell_name) %>% arrange(desc(n)) %>% filter(n>1) %>% select(cell_name)
+cell_types <- cell_types$cell_name
+
+
+# filter genes symbol info on the xlsx file
+cm_sets <- lapply(cell_types, function(x) cellmarkers %>% 
+                    filter(tissue_class=='Heart' & 
+                             cell_type=="Normal cell" &
+                             cell_name==x &
+                             !(is.na(Symbol)))  %>% pull(Symbol) %>% unique())
+
+cell_types <- unique(make.names(cell_types))
+names(cm_sets) <- cell_types
+set_names <- names(cm_sets)
+```
+
+Create list with geneset names from SpatialExperiment object
+```{r}
+genesetlist <- lapply(set_names, function(x) {
+  geneset <- rownames(rowData(spe)[rowData(spe)$symbol %in% cm_sets[[x]], ,drop=FALSE])
+})
+
+names(genesetlist) <- set_names
+genesetlist <- genesetlist[sapply(genesetlist, function(x) length(x) > 1)]
+```
+
+```{r}
+saveRDS(genesetlist, file="RDS_files/genesets.rds")
+```
+
+
+```{r}
+# Function  for comparison between GSVA scores and clusters
+source("gsva_cluster_tests.R")
+```
+
+# Read files
+
+
+```{r}
+gsvaPar <- gsvaParam(spe, genesetlist, assay = "logcounts", kcdf="none", minSize = 2)
+system.time(res <- gsva(gsvaPar,  BPPARAM=MulticoreParam(workers=4)))
+```
+
+# Get spatially variable genesets
+
+
+
+## GSVA SpatialFeatureExperiment object
+
+We coerce the SpatialExperiment object to SpatialFeatureExperiment object in order to use the package Voyager functionalities.
+
+```{r}
+
+
+gsva_sfe <- toSpatialFeatureExperiment(res)
+colGraph(gsva_sfe, "visium") <- findVisiumGraph(gsva_sfe, zero.policy = TRUE)
+
+```
+
+## Compute Moran's I for GSVA scores
+
+```{r}
+assays(gsva_sfe)$logcounts <- assays(gsva_sfe)$es
+moran_res <- runUnivariate(gsva_sfe, type = "moran", colGraphName = "visium")
+```
+
+```{r}
+rowData(moran_res)[order(rowData(moran_res)$moran_HumanHeart,decreasing = TRUE),][1:10,2:3]
+```
+### Plot Top 10 Spatially Autocorrelated Genesets
+
+```{r}
+
+top_SVG_genesets <- rownames(rowData(moran_res)[order(rowData(moran_res)$K_HumanHeart,decreasing = TRUE),][1:10,])
+plot_list_hist_gsva <- lapply(top_SVG_genesets, function(x){
+  pl <- plotVisium(res,y_coord = "pxl_col_in_fullres", x_coord = "pxl_row_in_fullres", fill = x, assay = "es",sample_ids=NULL) + ggtitle(paste0(x," GSVA scores superposed in histological image" ))+ theme(text = element_text(size = 7))
+  pl
+})
+```
+
+Clusters plot
+```{r}
+library(RColorBrewer)
+cluster_plot <- plotVisium(spe,y_coord = "pxl_col_in_fullres", x_coord = "pxl_row_in_fullres", fill = "label", palette = brewer.pal(9, "Set1"))+labs(subtitle=NULL)+ggtitle("Cluster regions")+ theme(text = element_text(size = 7))
+```
+
+```{r, out.width="300%"}
+for (i in 1:length(plot_list_hist_gsva)){
+    print(plot_list_hist_gsva[[i]]+cluster_plot)
+}
+```
+
+## Compute NNSVG for GSVA scores
+
+```{r}
+spe_nnSVG <- nnSVG(res, assay_name = "es", BPPARAM=MulticoreParam(workers=4))
+```
+
+```{r}
+rowData(spe_nnSVG)[order(rowData(spe_nnSVG)$rank,decreasing = TRUE),][1:10,2:15]
+```
+
+## Plot Top 10 Spatially Variable Genesets
+
+```{r}
+top_nnSVG_genesets <- rownames(rowData(spe_nnSVG)[order(rowData(spe_nnSVG)$rank,decreasing = FALSE),][1:10,])
+
+plot_list_hist_gsva_nnsvg <- lapply(top_nnSVG_genesets, function(x){
+  pl <- list(x,plotVisium(res,y_coord = "pxl_col_in_fullres", x_coord = "pxl_row_in_fullres", fill = x, assay = "es",sample_ids=NULL) +  ggtitle(paste0(x," GSVA scores superposed in histological image" ))+ theme(text = element_text(size = 7)))
+  pl
+})
+```
+
+```{r, out.width="300%"}
+for (i in 1:length(plot_list_hist_gsva_nnsvg)){
+  print(plot_list_hist_gsva_nnsvg[i][[1]][[2]]+cluster_plot)
+  print(gsva_clusters_ttests(spe,res,plot_list_hist_gsva_nnsvg[i][[1]][[1]]))
+}
+```
+
+
+# Correlation between clusters and genesets
+
+```{r, out.width="300%"}
+
+most_corr<-most_cor_geneset(spe,res)
+corr_plots <- lapply(1:length(unique(colData(spe)$label)), function(x){
+  pl <- plotVisium(res,y_coord = "pxl_col_in_fullres", x_coord = "pxl_row_in_fullres", fill = most_corr[x], assay = "es",sample_ids=NULL) + labs(subtitle=NULL)+ggtitle(paste0(most_corr[x]," GSVA scores (most correlated with cluster ",x,")" ))+ theme(text = element_text(size = 7))
+  })
+
+for (i in 1:length(corr_plots)){
+  print(corr_plots[[i]]+cluster_plot)
+}
+
+```
