@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>GSVA analysis mouse brain data</title>
+
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       </style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+  p.abstract{
+    text-align: center;
+    font-weight: bold;
+  }
+  div.abstract{
+    margin: auto;
+    width: 90%;
+  }
+</style>
+
+
+
+<link rel="stylesheet" href="/home/peremoles/R/x86_64-pc-linux-gnu-library/4.4/BiocStyle/resources/html/bioconductor.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 828px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 246px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+<script>
+function toggle_visibility(id1) {
+  var e = document.getElementById(id1);
+  e.style.display = ((e.style.display!="none") ? "none" : "block");
+}
+</script>
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">GSVA analysis of spatial transcriptomics data</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="01_qa_pr_mouse.html">QA &amp; processing mouse brain data</a>
+</li>
+<li>
+  <a href="02_gsva_mouse.html">GSVA analysis mouse brain data</a>
+</li>
+<li>
+  <a href="03_qa_pr_hdlpfc.html">QA &amp; processing human DLPFC data</a>
+</li>
+<li>
+  <a href="04_gsva_hdlpfc.html">GSVA analysis human DLPFC data</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">GSVA analysis mouse brain data</h1>
+<p class="author-name">Pere Moles<span class="affil-mark">1*</span></p>
+<p class="author-affiliation"><span class="affil-mark">1</span>Dept. of Medicine and Life Sciences, Universitat Pompeu Fabra</p>
+<p class="author-email"><span class="affil-mark">*</span><a href="mailto:pere.moles@upf.edu">pere.moles@upf.edu</a></p>
+<h4 class="date">de maig 31, 2024</h4>
+<h4 class="abstract">Abstract</h4>
+<p>Here we perform a GSVA analysis of the 10x Visium mouse brain data.</p>
+
+</div>
+
+
+<div id="download-data" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Download data</h1>
+<p>We start by downloading the data, following the instructions at
+<a href="http://research.libd.org/spatialLIBD/articles/spatialLIBD.html" class="uri">http://research.libd.org/spatialLIBD/articles/spatialLIBD.html</a></p>
+<pre class="r"><code>
+library(TENxVisiumData)
+library(SpatialExperiment)
+
+spe &lt;- MouseBrainSagittalAnterior()
+spe &lt;- spe[, colData(spe)$sample_id == &quot;MouseBrainSagittalAnterior1&quot;]</code></pre>
+<p>This is the row data.</p>
+<pre class="r"><code>rowData(spe)
+DataFrame with 32285 rows and 1 column
+                        symbol
+                   &lt;character&gt;
+ENSMUSG00000051951        Xkr4
+ENSMUSG00000089699      Gm1992
+ENSMUSG00000102331     Gm19938
+ENSMUSG00000102343     Gm37381
+ENSMUSG00000025900         Rp1
+...                        ...
+ENSMUSG00000095523  AC124606.1
+ENSMUSG00000095475  AC133095.2
+ENSMUSG00000094855  AC133095.1
+ENSMUSG00000095019  AC234645.1
+ENSMUSG00000095041  AC149090.1</code></pre>
+<p>This is the colum data. We have multiple samples and a few thousand spots per
+sample.</p>
+<pre class="r"><code>colData(spe)
+DataFrame with 2695 rows and 1 column
+                                sample_id
+                              &lt;character&gt;
+AAACAAGTATCTCCCA-1 MouseBrainSagittalAn..
+AAACACCAATAACTGC-1 MouseBrainSagittalAn..
+AAACAGAGCGACTCCT-1 MouseBrainSagittalAn..
+AAACAGCTTTCAGAAG-1 MouseBrainSagittalAn..
+AAACAGGGTCTATATT-1 MouseBrainSagittalAn..
+...                                   ...
+TTGTGTTTCCCGAAAG-1 MouseBrainSagittalAn..
+TTGTTCAGTGTGCTAC-1 MouseBrainSagittalAn..
+TTGTTGTGTGTCAAGA-1 MouseBrainSagittalAn..
+TTGTTTCACATCCAGG-1 MouseBrainSagittalAn..
+TTGTTTCCATACAACT-1 MouseBrainSagittalAn..</code></pre>
+<pre class="r"><code>table(colData(spe)$sample_id)
+
+MouseBrainSagittalAnterior1 
+                       2695 </code></pre>
+<p>For simplicity, we are going to analyze here only the sample with
+identifier <code>MouseBrainSagittalAnterior1</code>.</p>
+<pre class="r"><code>spe &lt;- spe[, colData(spe)$sample_id %in% &quot;MouseBrainSagittalAnterior1&quot;]
+dim(spe)
+[1] 32285  2695</code></pre>
+<p>There is an indicator column called <code>in_tissue</code> for identifying spots
+overlapping the tissue, but apparently all spots have such a condition.</p>
+<pre class="r"><code>stopifnot(all(colData(spe)$in_tissue))</code></pre>
+<p>This is the internal column metadata.</p>
+<pre class="r"><code>int_colData(spe)
+DataFrame with 2695 rows and 5 columns
+     reducedDims     altExps    colPairs spatialCoords spatialData
+     &lt;DataFrame&gt; &lt;DataFrame&gt; &lt;DataFrame&gt;      &lt;matrix&gt; &lt;DataFrame&gt;
+1                                            7474:8500 TRUE:50:102
+2                                            8552:2788  TRUE:59:19
+3                                            3163:7950  TRUE:14:94
+4                                            6636:2100   TRUE:43:9
+5                                            7115:2375  TRUE:47:13
+...          ...         ...         ...           ...         ...
+2691                                         7594:5541  TRUE:51:59
+2692                                         4361:5885  TRUE:24:64
+2693                                         5199:6780  TRUE:31:77
+2694                                         8433:4371  TRUE:58:42
+2695                                         6876:3339  TRUE:45:27</code></pre>
+</div>
+<div id="quality-assessment" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Quality assessment</h1>
+<p>Identify mitochondrial (MT) genes, here the column with the gene HUGO symbols
+is called <code>gene_name</code>.</p>
+<pre class="r"><code>is_mito &lt;- grepl(&quot;(^MT-)|(^mt-)&quot;, rowData(spe)$gene_name)
+table(is_mito)
+&lt; table of extent 0 &gt;</code></pre>
+<pre class="r"><code>rowData(spe)$gene_name[is_mito]
+NULL</code></pre>
+<p>Add quality control metrics.</p>
+<pre class="r"><code>library(scuttle)
+library(ggspavis)
+library(patchwork)
+
+spe &lt;- addPerCellQC(spe, subsets=list(mito=is_mito))</code></pre>
+<p>Explore sequencing depth in UMI counts per spot. Figure
+<a href="#fig:mousetissueUMIcntxspot">1</a> shows in the tissue image the spatial
+pattern of sequencing depth in UMI counts per spot.</p>
+<pre class="r"><code>## image seems to be reversed and for this reason we set x_coord=&quot;pxl_col_in_fullres&quot;
+## and y_coord=&quot;pxl_row_in_fullres&quot;
+plotVisium(spe, x_coord=&quot;pxl_row_in_fullres&quot;,
+           y_coord=&quot;pxl_col_in_fullres&quot;,
+           annotate=&quot;sum&quot;, point_size=1,
+           pal=c(&quot;skyblue&quot;, &quot;darkred&quot;), facets=NULL)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mousetissueUMIcntxspot"></span>
+<img src="01_qa_pr_mouse_files/figure-html/mousetissueUMIcntxspot-1.png" alt="Spatial pattern of sequencing depth per spot in UMI counts." width="600px"  class="widefigure" />
+<p class="caption">
+Figure 1: <span class="caption-title">Spatial pattern of sequencing depth per spot in UMI counts</span><br>
+</p>
+</div>
+<p>Figure <a href="#fig:mouseUMIcntxspot">2</a>a
+shows the frequency distribution of UMI counts per spot and panels (b) to (d)
+show the spatial distribution of discarded spots at different cutoffs of
+sequencing depth (2000, 1000 and 700).</p>
+<pre class="r"><code>hp &lt;- ggplot(data=colData(spe), aes(x=sum)) +
+        geom_histogram(bins=40) +
+        labs(x=&quot;UMI counts per spot&quot;, y=&quot;Frequency&quot;, tag=&quot;a&quot;) +
+        geom_vline(aes(xintercept=2000), col=&quot;darkgreen&quot;) +
+        geom_vline(aes(xintercept=1000), col=&quot;darkorange&quot;) +
+        geom_vline(aes(xintercept=700), col=&quot;darkred&quot;)
+colData(spe)$qc_lib_size &lt;- colData(spe)$sum &lt; 2000
+qp2k &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_lib_size&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;b&quot;)
+colData(spe)$qc_lib_size &lt;- colData(spe)$sum &lt; 1000
+qp1k &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_lib_size&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;c&quot;)
+colData(spe)$qc_lib_size &lt;- colData(spe)$sum &lt; 700
+qp700 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_lib_size&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;d&quot;)
+(hp | qp2k) / (qp1k | qp700)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mouseUMIcntxspot"></span>
+<img src="01_qa_pr_mouse_files/figure-html/mouseUMIcntxspot-1.png" alt="Sequencing depth per spot in UMI counts. (a) Frequency distribution of UMI counts, where vertical lines indicate possible cutoff UMI count values below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 2: <span class="caption-title">Sequencing depth per spot in UMI counts</span><br>(a) Frequency distribution of UMI counts, where vertical lines indicate possible cutoff UMI count values below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values.
+</p>
+</div>
+<p>Explore number of genes with non-zero UMI counts per spot. Figure
+<a href="#fig:mousenonzeroUMIcntxspot">3</a>a shows the frequency distribution of genes
+per spot with non-zero UMI counts, while panels (b) do (d)
+show the spatial distribution of discarded spots at different cutoffs of
+sequencing depth (1000, 750 and 500).</p>
+<pre class="r"><code>hp &lt;- ggplot(data=colData(spe), aes(x=detected)) +
+        geom_histogram(bins=40) +
+        labs(x=&quot;Genes with non-zero UMI counts per spot&quot;,
+             y=&quot;Frequency&quot;, tag=&quot;a&quot;) +
+        geom_vline(aes(xintercept=1000), col=&quot;darkgreen&quot;) +
+        geom_vline(aes(xintercept=750), col=&quot;darkorange&quot;) +
+        geom_vline(aes(xintercept=500), col=&quot;darkred&quot;)
+colData(spe)$qc_detected &lt;- colData(spe)$detected &lt; 1000
+qp1k &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_detected&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;b&quot;)
+colData(spe)$qc_detected &lt;- colData(spe)$detected &lt; 750
+qp750 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_detected&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;c&quot;)
+colData(spe)$qc_detected &lt;- colData(spe)$detected &lt; 500
+qp500 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_detected&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;d&quot;)
+(hp | qp1k) / (qp750 | qp500)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mousenonzeroUMIcntxspot"></span>
+<img src="01_qa_pr_mouse_files/figure-html/mousenonzeroUMIcntxspot-1.png" alt="Non-zero UMI counts per spot. (a) Frequency distribution of non-zero UMI counts per spot, where vertical lines indicate possible cutoff values in the number of genes with non-zero UMI counts, below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 3: <span class="caption-title">Non-zero UMI counts per spot</span><br>(a) Frequency distribution of non-zero UMI counts per spot, where vertical lines indicate possible cutoff values in the number of genes with non-zero UMI counts, below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values.
+</p>
+</div>
+<p>Figure <a href="#fig:mouseMTUMIcntxspot">4</a> shows the proportion of MT UMI counts per
+spot.</p>
+<pre class="r"><code>hp &lt;- ggplot(data=colData(spe), aes(x=subsets_mito_percent)) +
+        geom_histogram(bins=40) +
+        labs(x=&quot;Proportion of mitochondrial UMI counts per spot&quot;,
+             y=&quot;Frequency&quot;, tag=&quot;a&quot;) +
+        geom_vline(aes(xintercept=25), col=&quot;darkgreen&quot;) +
+        geom_vline(aes(xintercept=27), col=&quot;darkorange&quot;) +
+        geom_vline(aes(xintercept=29), col=&quot;darkred&quot;)
+colData(spe)$qc_mito &lt;- colData(spe)$subsets_mito_percent &gt; 25
+qp25 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_mito&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;b&quot;)
+colData(spe)$qc_mito &lt;- colData(spe)$subsets_mito_percent &gt; 27
+qp27 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_mito&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;c&quot;)
+colData(spe)$qc_mito &lt;- colData(spe)$subsets_mito_percent &gt; 29
+qp29 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_mito&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;d&quot;)
+(hp | qp25) / (qp27 | qp29)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mouseMTUMIcntxspot"></span>
+<img src="01_qa_pr_mouse_files/figure-html/mouseMTUMIcntxspot-1.png" alt="Mitochondrial UMI counts per spot. (a) Frequency distribution of the proportion of mitochondrial UMI counts per spot, where vertical lines indicate possible cutoff values in the proportion of UMI counts from mitochondrial genes, above which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 4: <span class="caption-title">Mitochondrial UMI counts per spot</span><br>(a) Frequency distribution of the proportion of mitochondrial UMI counts per spot, where vertical lines indicate possible cutoff values in the proportion of UMI counts from mitochondrial genes, above which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values.
+</p>
+</div>
+<p>We use the more lenient cutoff values in the previous three
+QC metrics, which lead to the following amount of discarded
+spots per metric.</p>
+<pre class="r"><code>colData(spe)$discard &lt;- colData(spe)$qc_lib_size |
+                        colData(spe)$qc_detected |
+                        colData(spe)$qc_mito
+table(colData(spe)$discard)
+
+FALSE  TRUE 
+ 2690     5 </code></pre>
+<p>Figure <a href="#fig:mousediscardedspots">5</a> below shows the spatial pattern of the
+discarded spots.</p>
+<pre class="r"><code>pqc &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;discard&quot;) +
+         theme(legend.position=&quot;none&quot;) + labs(tag=&quot;a&quot;)
+## image seems to be reversed and for this reason we set x_coord=&quot;pxl_col_in_fullres&quot;
+## and y_coord=&quot;pxl_row_in_fullres&quot;
+pts &lt;- plotVisium(spe, x_coord=&quot;pxl_row_in_fullres&quot;, facets=NULL,
+                  y_coord=&quot;pxl_col_in_fullres&quot;, annotate=&quot;discard&quot;) +
+         labs(tag=&quot;b&quot;) + theme(legend.position=&quot;none&quot;)
+(pqc | pts)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mousediscardedspots"></span>
+<img src="01_qa_pr_mouse_files/figure-html/mousediscardedspots-1.png" alt="Spatial pattern of discarded spots. (a) Discarded spots highlighted in red in the spot grid. (b) Discarded spots highlighted in blue in the tissue plot." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 5: <span class="caption-title">Spatial pattern of discarded spots</span><br>(a) Discarded spots highlighted in red in the spot grid. (b) Discarded spots highlighted in blue in the tissue plot.
+</p>
+</div>
+<p>Finally, we filter out these low-quality spots.</p>
+<pre class="r"><code>dim(spe)
+[1] 32285  2695</code></pre>
+<pre class="r"><code>spe &lt;- spe[, !colData(spe)$discard]
+dim(spe)
+[1] 32285  2690</code></pre>
+</div>
+<div id="filter-lowly-expressed-genes" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Filter lowly-expressed genes</h1>
+<p>Figure <a href="#fig:mouseUMIcntxgene">6</a> shows the empirical distribution of UMI
+counts per gene.</p>
+<pre class="r"><code>cntxgene &lt;- rowSums(assays(spe)$counts)+1
+plot.ecdf(cntxgene, xaxt=&quot;n&quot;, panel.first=grid(), xlab=&quot;UMI counts per gene&quot;,
+          las=1, log=&quot;x&quot;, xlim=c(1, 10e5), main=&quot;&quot;)
+axis(1, at=10^(0:5), labels=10^(0:5))
+abline(v=100, lwd=2, col=&quot;red&quot;)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mouseUMIcntxgene"></span>
+<img src="01_qa_pr_mouse_files/figure-html/mouseUMIcntxgene-1.png" alt="UMI counts per gene. The vertical red line shows a cutoff value below which we discard lowly-expressed genes." width="500px"  class="widefigure" />
+<p class="caption">
+Figure 6: <span class="caption-title">UMI counts per gene</span><br>The vertical red line shows a cutoff value below which we discard lowly-expressed genes.
+</p>
+</div>
+<p>We filter out genes with less than 100 counts throughout all spots.</p>
+<pre class="r"><code>dim(spe)
+[1] 32285  2690</code></pre>
+<pre class="r"><code>spe.filt &lt;- spe[cntxgene &gt; 100, ]
+dim(spe.filt)
+[1] 13469  2690</code></pre>
+</div>
+<div id="normalization" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Normalization</h1>
+<p>Calculate normalization factors and normalized expression values in logarithmic
+scale.</p>
+<pre class="r"><code>spe.filt &lt;- computeLibraryFactors(spe.filt)
+summary(sizeFactors(spe.filt))
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.03655 0.70188 1.00850 1.00000 1.29545 2.76666 </code></pre>
+<pre class="r"><code>spe.filt &lt;- logNormCounts(spe.filt)
+assayNames(spe.filt)
+[1] &quot;counts&quot;    &quot;logcounts&quot;</code></pre>
+<pre class="r"><code>assays(spe.filt)$logcounts[1:5, 1:4]
+5 x 4 sparse Matrix of class &quot;dgCMatrix&quot;
+                   AAACAAGTATCTCCCA-1 AAACACCAATAACTGC-1 AAACAGAGCGACTCCT-1
+ENSMUSG00000025902           .                 0.7208732          .        
+ENSMUSG00000033845           2.227128          0.7208732          2.1493081
+ENSMUSG00000025903           .                 0.7208732          1.4425853
+ENSMUSG00000033813           2.227128          1.1993479          0.8945559
+ENSMUSG00000002459           .                 0.7208732          .        
+                   AAACAGCTTTCAGAAG-1
+ENSMUSG00000025902           .       
+ENSMUSG00000033845           .       
+ENSMUSG00000025903           1.148245
+ENSMUSG00000033813           1.498078
+ENSMUSG00000002459           1.498078</code></pre>
+</div>
+<div id="gene-sets-preparation" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Gene Sets preparation</h1>
+<p>Load gene sets and select those with more than one gene annotated to brain and
+normal cell types.</p>
+<pre class="r"><code>library(openxlsx)
+library(dplyr)
+
+cellmarkers &lt;- read.xlsx(file.path(&quot;_annotation_data&quot;, &quot;Cell_marker_Mouse.xlsx&quot;),
+                         rowNames=FALSE)
+dim(cellmarkers)
+[1] 35197    20</code></pre>
+<pre class="r"><code>head(cellmarkers, 3)
+  species tissue_class tissue_type uberonongology_id cancer_type   cell_type
+1   Mouse      Abdomen      Muscle    UBERON_0001630      Normal Normal cell
+2   Mouse      Abdomen      Muscle    UBERON_0001630      Normal Normal cell
+3   Mouse      Abdomen      Muscle    UBERON_0001630      Normal Normal cell
+                         cell_name cellontology_id marker Symbol GeneID
+1 Fibro-adipogenic progenitor cell            &lt;NA&gt;  Wisp1   Ccn4  22402
+2                         Myoblast      CL_0000056  Myod1  Myod1  17927
+3            Muscle satellite cell      CL_0000514   Myf5   Myf5  17877
+        Genetype                                Genename UNIPROTID
+1 protein_coding cellular communication network factor 4    O54775
+2 protein_coding              myogenic differentiation 1    P10085
+3 protein_coding                       myogenic factor 5    A2RSK4
+  technology_seq marker_source     PMID
+1   10x Chromium    Experiment 35439171
+2   10x Chromium    Experiment 35439171
+3   10x Chromium    Experiment 35439171
+                                                                                                           Title
+1 An estrogen-sensitive fibroblast population drives abdominal muscle fibrosis in an inguinal hernia mouse model
+2 An estrogen-sensitive fibroblast population drives abdominal muscle fibrosis in an inguinal hernia mouse model
+3 An estrogen-sensitive fibroblast population drives abdominal muscle fibrosis in an inguinal hernia mouse model
+      journal year
+1 JCI insight 2022
+2 JCI insight 2022
+3 JCI insight 2022</code></pre>
+<pre class="r"><code>mask &lt;- !is.na(cellmarkers$Symbol) &amp; !is.na(cellmarkers$GeneID)
+sum(mask)
+[1] 28909</code></pre>
+<pre class="r"><code>cellmarkers &lt;- cellmarkers[mask, ]
+dim(cellmarkers)
+[1] 28909    20</code></pre>
+<pre class="r"><code>mask &lt;- cellmarkers$tissue_class == &quot;Brain&quot; &amp;
+        cellmarkers$cell_type == &quot;Normal cell&quot;
+mask[is.na(mask)] &lt;- FALSE
+sum(mask)
+[1] 7306</code></pre>
+<pre class="r"><code>braincellmarkers &lt;- cellmarkers[mask, ]
+head(sort(table(braincellmarkers$cell_name), decreasing=TRUE))
+
+ Type I spiral ganglion neuron                Microglial cell 
+                          1120                           1041 
+                        Neuron                      Astrocyte 
+                           799                            795 
+Type II spiral ganglion neuron                Oligodendrocyte 
+                           607                            562 </code></pre>
+<pre class="r"><code>cell_types &lt;- split(braincellmarkers$Symbol, braincellmarkers$cell_name)
+length(cell_types)
+[1] 222</code></pre>
+<p>Map gene identifiers to those in the <code>SpatialExperiment</code> object.</p>
+<pre class="r"><code>cell_types &lt;- lapply(cell_types,
+                     function(x, speids, spesyms)
+                       speids[spesyms %in% x],
+                     rownames(spe.filt), rowData(spe.filt)$symbol)
+cell_types &lt;- cell_types[lengths(cell_types) &gt; 1]
+length(cell_types)
+[1] 134</code></pre>
+<pre class="r"><code>names(cell_types) &lt;- make.names(names(cell_types))
+head(cell_types)
+$Activated.microglial.cell
+[1] &quot;ENSMUSG00000093674&quot; &quot;ENSMUSG00000041841&quot;
+
+$Activated.neural.stem.cell
+[1] &quot;ENSMUSG00000007872&quot; &quot;ENSMUSG00000041556&quot; &quot;ENSMUSG00000036570&quot;
+[4] &quot;ENSMUSG00000020932&quot; &quot;ENSMUSG00000021702&quot;
+
+$Artery.cell
+[1] &quot;ENSMUSG00000001300&quot; &quot;ENSMUSG00000031520&quot;
+
+$Astrocyte
+  [1] &quot;ENSMUSG00000002459&quot; &quot;ENSMUSG00000025911&quot; &quot;ENSMUSG00000048960&quot;
+  [4] &quot;ENSMUSG00000037509&quot; &quot;ENSMUSG00000056870&quot; &quot;ENSMUSG00000025978&quot;
+  [7] &quot;ENSMUSG00000015222&quot; &quot;ENSMUSG00000026003&quot; &quot;ENSMUSG00000026193&quot;
+ [10] &quot;ENSMUSG00000055322&quot; &quot;ENSMUSG00000026173&quot; &quot;ENSMUSG00000032883&quot;
+ [13] &quot;ENSMUSG00000055980&quot; &quot;ENSMUSG00000026223&quot; &quot;ENSMUSG00000026255&quot;
+ [16] &quot;ENSMUSG00000026259&quot; &quot;ENSMUSG00000056055&quot; &quot;ENSMUSG00000034343&quot;
+ [19] &quot;ENSMUSG00000057329&quot; &quot;ENSMUSG00000026385&quot; &quot;ENSMUSG00000026424&quot;
+ [22] &quot;ENSMUSG00000026421&quot; &quot;ENSMUSG00000026478&quot; &quot;ENSMUSG00000026473&quot;
+ [25] &quot;ENSMUSG00000033671&quot; &quot;ENSMUSG00000026600&quot; &quot;ENSMUSG00000026701&quot;
+ [28] &quot;ENSMUSG00000026697&quot; &quot;ENSMUSG00000040181&quot; &quot;ENSMUSG00000038370&quot;
+ [31] &quot;ENSMUSG00000007097&quot; &quot;ENSMUSG00000044708&quot; &quot;ENSMUSG00000026527&quot;
+ [34] &quot;ENSMUSG00000038855&quot; &quot;ENSMUSG00000026614&quot; &quot;ENSMUSG00000026626&quot;
+ [37] &quot;ENSMUSG00000037434&quot; &quot;ENSMUSG00000016194&quot; &quot;ENSMUSG00000025815&quot;
+ [40] &quot;ENSMUSG00000025780&quot; &quot;ENSMUSG00000026728&quot; &quot;ENSMUSG00000036949&quot;
+ [43] &quot;ENSMUSG00000053702&quot; &quot;ENSMUSG00000036591&quot; &quot;ENSMUSG00000015085&quot;
+ [46] &quot;ENSMUSG00000026933&quot; &quot;ENSMUSG00000026932&quot; &quot;ENSMUSG00000009614&quot;
+ [49] &quot;ENSMUSG00000057738&quot; &quot;ENSMUSG00000007476&quot; &quot;ENSMUSG00000076441&quot;
+ [52] &quot;ENSMUSG00000039254&quot; &quot;ENSMUSG00000026879&quot; &quot;ENSMUSG00000035778&quot;
+ [55] &quot;ENSMUSG00000026827&quot; &quot;ENSMUSG00000034848&quot; &quot;ENSMUSG00000044033&quot;
+ [58] &quot;ENSMUSG00000027007&quot; &quot;ENSMUSG00000027004&quot; &quot;ENSMUSG00000048388&quot;
+ [61] &quot;ENSMUSG00000033955&quot; &quot;ENSMUSG00000063235&quot; &quot;ENSMUSG00000027257&quot;
+ [64] &quot;ENSMUSG00000027253&quot; &quot;ENSMUSG00000075012&quot; &quot;ENSMUSG00000005089&quot;
+ [67] &quot;ENSMUSG00000027187&quot; &quot;ENSMUSG00000027332&quot; &quot;ENSMUSG00000027200&quot;
+ [70] &quot;ENSMUSG00000027303&quot; &quot;ENSMUSG00000037523&quot; &quot;ENSMUSG00000027447&quot;
+ [73] &quot;ENSMUSG00000027452&quot; &quot;ENSMUSG00000033059&quot; &quot;ENSMUSG00000042745&quot;
+ [76] &quot;ENSMUSG00000027488&quot; &quot;ENSMUSG00000000876&quot; &quot;ENSMUSG00000027605&quot;
+ [79] &quot;ENSMUSG00000067847&quot; &quot;ENSMUSG00000067818&quot; &quot;ENSMUSG00000035877&quot;
+ [82] &quot;ENSMUSG00000017009&quot; &quot;ENSMUSG00000017754&quot; &quot;ENSMUSG00000017670&quot;
+ [85] &quot;ENSMUSG00000018459&quot; &quot;ENSMUSG00000039621&quot; &quot;ENSMUSG00000049999&quot;
+ [88] &quot;ENSMUSG00000027574&quot; &quot;ENSMUSG00000040374&quot; &quot;ENSMUSG00000027533&quot;
+ [91] &quot;ENSMUSG00000027562&quot; &quot;ENSMUSG00000039519&quot; &quot;ENSMUSG00000074637&quot;
+ [94] &quot;ENSMUSG00000049100&quot; &quot;ENSMUSG00000027737&quot; &quot;ENSMUSG00000027797&quot;
+ [97] &quot;ENSMUSG00000036885&quot; &quot;ENSMUSG00000047557&quot; &quot;ENSMUSG00000034109&quot;
+[100] &quot;ENSMUSG00000027809&quot; &quot;ENSMUSG00000033981&quot; &quot;ENSMUSG00000033910&quot;
+[103] &quot;ENSMUSG00000004891&quot; &quot;ENSMUSG00000004892&quot; &quot;ENSMUSG00000097156&quot;
+[106] &quot;ENSMUSG00000068923&quot; &quot;ENSMUSG00000042613&quot; &quot;ENSMUSG00000028145&quot;
+[109] &quot;ENSMUSG00000027875&quot; &quot;ENSMUSG00000053398&quot; &quot;ENSMUSG00000027894&quot;
+[112] &quot;ENSMUSG00000027893&quot; &quot;ENSMUSG00000004032&quot; &quot;ENSMUSG00000058135&quot;
+[115] &quot;ENSMUSG00000027884&quot; &quot;ENSMUSG00000045092&quot; &quot;ENSMUSG00000027962&quot;
+[118] &quot;ENSMUSG00000033400&quot; &quot;ENSMUSG00000053931&quot; &quot;ENSMUSG00000028128&quot;
+[121] &quot;ENSMUSG00000028127&quot; &quot;ENSMUSG00000028121&quot; &quot;ENSMUSG00000028024&quot;
+[124] &quot;ENSMUSG00000027984&quot; &quot;ENSMUSG00000028273&quot; &quot;ENSMUSG00000040213&quot;
+[127] &quot;ENSMUSG00000062908&quot; &quot;ENSMUSG00000028179&quot; &quot;ENSMUSG00000028223&quot;
+[130] &quot;ENSMUSG00000028248&quot; &quot;ENSMUSG00000055373&quot; &quot;ENSMUSG00000028295&quot;
+[133] &quot;ENSMUSG00000028443&quot; &quot;ENSMUSG00000046312&quot; &quot;ENSMUSG00000028444&quot;
+[136] &quot;ENSMUSG00000036078&quot; &quot;ENSMUSG00000028464&quot; &quot;ENSMUSG00000028480&quot;
+[139] &quot;ENSMUSG00000070972&quot; &quot;ENSMUSG00000028383&quot; &quot;ENSMUSG00000028364&quot;
+[142] &quot;ENSMUSG00000028402&quot; &quot;ENSMUSG00000038024&quot; &quot;ENSMUSG00000015224&quot;
+[145] &quot;ENSMUSG00000028565&quot; &quot;ENSMUSG00000035275&quot; &quot;ENSMUSG00000028530&quot;
+[148] &quot;ENSMUSG00000028527&quot; &quot;ENSMUSG00000028517&quot; &quot;ENSMUSG00000034853&quot;
+[151] &quot;ENSMUSG00000028607&quot; &quot;ENSMUSG00000028603&quot; &quot;ENSMUSG00000028601&quot;
+[154] &quot;ENSMUSG00000063882&quot; &quot;ENSMUSG00000028542&quot; &quot;ENSMUSG00000033295&quot;
+[157] &quot;ENSMUSG00000028645&quot; &quot;ENSMUSG00000028641&quot; &quot;ENSMUSG00000028631&quot;
+[160] &quot;ENSMUSG00000028649&quot; &quot;ENSMUSG00000066043&quot; &quot;ENSMUSG00000037348&quot;
+[163] &quot;ENSMUSG00000007872&quot; &quot;ENSMUSG00000028766&quot; &quot;ENSMUSG00000028745&quot;
+[166] &quot;ENSMUSG00000028737&quot; &quot;ENSMUSG00000020220&quot; &quot;ENSMUSG00000041556&quot;
+[169] &quot;ENSMUSG00000063077&quot; &quot;ENSMUSG00000028988&quot; &quot;ENSMUSG00000048001&quot;
+[172] &quot;ENSMUSG00000029063&quot; &quot;ENSMUSG00000041936&quot; &quot;ENSMUSG00000003623&quot;
+[175] &quot;ENSMUSG00000003974&quot; &quot;ENSMUSG00000056367&quot; &quot;ENSMUSG00000025745&quot;
+[178] &quot;ENSMUSG00000014932&quot; &quot;ENSMUSG00000054252&quot; &quot;ENSMUSG00000029093&quot;
+[181] &quot;ENSMUSG00000029086&quot; &quot;ENSMUSG00000037999&quot; &quot;ENSMUSG00000037890&quot;
+[184] &quot;ENSMUSG00000037736&quot; &quot;ENSMUSG00000060961&quot; &quot;ENSMUSG00000034573&quot;
+[187] &quot;ENSMUSG00000029309&quot; &quot;ENSMUSG00000034462&quot; &quot;ENSMUSG00000011831&quot;
+[190] &quot;ENSMUSG00000029499&quot; &quot;ENSMUSG00000029575&quot; &quot;ENSMUSG00000029596&quot;
+[193] &quot;ENSMUSG00000042647&quot; &quot;ENSMUSG00000029446&quot; &quot;ENSMUSG00000025537&quot;
+[196] &quot;ENSMUSG00000029722&quot; &quot;ENSMUSG00000036718&quot; &quot;ENSMUSG00000029570&quot;
+[199] &quot;ENSMUSG00000036565&quot; &quot;ENSMUSG00000039533&quot; &quot;ENSMUSG00000029636&quot;
+[202] &quot;ENSMUSG00000032667&quot; &quot;ENSMUSG00000068748&quot; &quot;ENSMUSG00000048022&quot;
+[205] &quot;ENSMUSG00000029772&quot; &quot;ENSMUSG00000029761&quot; &quot;ENSMUSG00000029838&quot;
+[208] &quot;ENSMUSG00000038507&quot; &quot;ENSMUSG00000029864&quot; &quot;ENSMUSG00000029810&quot;
+[211] &quot;ENSMUSG00000043496&quot; &quot;ENSMUSG00000029778&quot; &quot;ENSMUSG00000029781&quot;
+[214] &quot;ENSMUSG00000052337&quot; &quot;ENSMUSG00000056666&quot; &quot;ENSMUSG00000035104&quot;
+[217] &quot;ENSMUSG00000031865&quot; &quot;ENSMUSG00000045160&quot; &quot;ENSMUSG00000033720&quot;
+[220] &quot;ENSMUSG00000057103&quot; &quot;ENSMUSG00000000811&quot; &quot;ENSMUSG00000030088&quot;
+[223] &quot;ENSMUSG00000030029&quot; &quot;ENSMUSG00000061838&quot; &quot;ENSMUSG00000033933&quot;
+[226] &quot;ENSMUSG00000030307&quot; &quot;ENSMUSG00000030310&quot; &quot;ENSMUSG00000030323&quot;
+[229] &quot;ENSMUSG00000058979&quot; &quot;ENSMUSG00000004902&quot; &quot;ENSMUSG00000030111&quot;
+[232] &quot;ENSMUSG00000001521&quot; &quot;ENSMUSG00000008540&quot; &quot;ENSMUSG00000030428&quot;
+[235] &quot;ENSMUSG00000002985&quot; &quot;ENSMUSG00000060376&quot; &quot;ENSMUSG00000004056&quot;
+[238] &quot;ENSMUSG00000053898&quot; &quot;ENSMUSG00000001794&quot; &quot;ENSMUSG00000036751&quot;
+[241] &quot;ENSMUSG00000030495&quot; &quot;ENSMUSG00000034875&quot; &quot;ENSMUSG00000043671&quot;
+[244] &quot;ENSMUSG00000030739&quot; &quot;ENSMUSG00000040136&quot; &quot;ENSMUSG00000063297&quot;
+[247] &quot;ENSMUSG00000033429&quot; &quot;ENSMUSG00000030554&quot; &quot;ENSMUSG00000055652&quot;
+[250] &quot;ENSMUSG00000030605&quot; &quot;ENSMUSG00000030527&quot; &quot;ENSMUSG00000015709&quot;
+[253] &quot;ENSMUSG00000001773&quot; &quot;ENSMUSG00000049583&quot; &quot;ENSMUSG00000030613&quot;
+[256] &quot;ENSMUSG00000070436&quot; &quot;ENSMUSG00000051048&quot; &quot;ENSMUSG00000029461&quot;
+[259] &quot;ENSMUSG00000030770&quot; &quot;ENSMUSG00000030905&quot; &quot;ENSMUSG00000030847&quot;
+[262] &quot;ENSMUSG00000006205&quot; &quot;ENSMUSG00000030861&quot; &quot;ENSMUSG00000030934&quot;
+[265] &quot;ENSMUSG00000030986&quot; &quot;ENSMUSG00000058325&quot; &quot;ENSMUSG00000062031&quot;
+[268] &quot;ENSMUSG00000025495&quot; &quot;ENSMUSG00000058454&quot; &quot;ENSMUSG00000037519&quot;
+[271] &quot;ENSMUSG00000004568&quot; &quot;ENSMUSG00000004565&quot; &quot;ENSMUSG00000031458&quot;
+[274] &quot;ENSMUSG00000055675&quot; &quot;ENSMUSG00000031467&quot; &quot;ENSMUSG00000037656&quot;
+[277] &quot;ENSMUSG00000031596&quot; &quot;ENSMUSG00000031636&quot; &quot;ENSMUSG00000031517&quot;
+[280] &quot;ENSMUSG00000058056&quot; &quot;ENSMUSG00000037852&quot; &quot;ENSMUSG00000031604&quot;
+[283] &quot;ENSMUSG00000002341&quot; &quot;ENSMUSG00000002346&quot; &quot;ENSMUSG00000031808&quot;
+[286] &quot;ENSMUSG00000048148&quot; &quot;ENSMUSG00000003809&quot; &quot;ENSMUSG00000031700&quot;
+[289] &quot;ENSMUSG00000036879&quot; &quot;ENSMUSG00000031748&quot; &quot;ENSMUSG00000031785&quot;
+[292] &quot;ENSMUSG00000017765&quot; &quot;ENSMUSG00000003849&quot; &quot;ENSMUSG00000031767&quot;
+[295] &quot;ENSMUSG00000034424&quot; &quot;ENSMUSG00000031980&quot; &quot;ENSMUSG00000025888&quot;
+[298] &quot;ENSMUSG00000047193&quot; &quot;ENSMUSG00000053110&quot; &quot;ENSMUSG00000032180&quot;
+[301] &quot;ENSMUSG00000032194&quot; &quot;ENSMUSG00000036777&quot; &quot;ENSMUSG00000036611&quot;
+[304] &quot;ENSMUSG00000041444&quot; &quot;ENSMUSG00000039048&quot; &quot;ENSMUSG00000046240&quot;
+[307] &quot;ENSMUSG00000059495&quot; &quot;ENSMUSG00000032109&quot; &quot;ENSMUSG00000032085&quot;
+[310] &quot;ENSMUSG00000039542&quot; &quot;ENSMUSG00000032281&quot; &quot;ENSMUSG00000032314&quot;
+[313] &quot;ENSMUSG00000032320&quot; &quot;ENSMUSG00000074305&quot; &quot;ENSMUSG00000049556&quot;
+[316] &quot;ENSMUSG00000034485&quot; &quot;ENSMUSG00000041729&quot; &quot;ENSMUSG00000013584&quot;
+[319] &quot;ENSMUSG00000062151&quot; &quot;ENSMUSG00000032349&quot; &quot;ENSMUSG00000032348&quot;
+[322] &quot;ENSMUSG00000033577&quot; &quot;ENSMUSG00000032261&quot; &quot;ENSMUSG00000032356&quot;
+[325] &quot;ENSMUSG00000033350&quot; &quot;ENSMUSG00000049493&quot; &quot;ENSMUSG00000032413&quot;
+[328] &quot;ENSMUSG00000032470&quot; &quot;ENSMUSG00000043154&quot; &quot;ENSMUSG00000090150&quot;
+[331] &quot;ENSMUSG00000010064&quot; &quot;ENSMUSG00000039952&quot; &quot;ENSMUSG00000032607&quot;
+[334] &quot;ENSMUSG00000032609&quot; &quot;ENSMUSG00000052911&quot; &quot;ENSMUSG00000032602&quot;
+[337] &quot;ENSMUSG00000053646&quot; &quot;ENSMUSG00000032479&quot; &quot;ENSMUSG00000006932&quot;
+[340] &quot;ENSMUSG00000032536&quot; &quot;ENSMUSG00000038412&quot; &quot;ENSMUSG00000025239&quot;
+[343] &quot;ENSMUSG00000040021&quot; &quot;ENSMUSG00000015305&quot; &quot;ENSMUSG00000019820&quot;
+[346] &quot;ENSMUSG00000039835&quot; &quot;ENSMUSG00000019883&quot; &quot;ENSMUSG00000019846&quot;
+[349] &quot;ENSMUSG00000019823&quot; &quot;ENSMUSG00000019822&quot; &quot;ENSMUSG00000050953&quot;
+[352] &quot;ENSMUSG00000019874&quot; &quot;ENSMUSG00000037747&quot; &quot;ENSMUSG00000001666&quot;
+[355] &quot;ENSMUSG00000001663&quot; &quot;ENSMUSG00000033208&quot; &quot;ENSMUSG00000001211&quot;
+[358] &quot;ENSMUSG00000013858&quot; &quot;ENSMUSG00000020263&quot; &quot;ENSMUSG00000020052&quot;
+[361] &quot;ENSMUSG00000060002&quot; &quot;ENSMUSG00000019975&quot; &quot;ENSMUSG00000036099&quot;
+[364] &quot;ENSMUSG00000020021&quot; &quot;ENSMUSG00000074785&quot; &quot;ENSMUSG00000020186&quot;
+[367] &quot;ENSMUSG00000069516&quot; &quot;ENSMUSG00000020183&quot; &quot;ENSMUSG00000049858&quot;
+[370] &quot;ENSMUSG00000025348&quot; &quot;ENSMUSG00000034570&quot; &quot;ENSMUSG00000003585&quot;
+[373] &quot;ENSMUSG00000034412&quot; &quot;ENSMUSG00000020407&quot; &quot;ENSMUSG00000020122&quot;
+[376] &quot;ENSMUSG00000020142&quot; &quot;ENSMUSG00000042363&quot; &quot;ENSMUSG00000051650&quot;
+[379] &quot;ENSMUSG00000060923&quot; &quot;ENSMUSG00000020282&quot; &quot;ENSMUSG00000040711&quot;
+[382] &quot;ENSMUSG00000018849&quot; &quot;ENSMUSG00000020386&quot; &quot;ENSMUSG00000036275&quot;
+[385] &quot;ENSMUSG00000020388&quot; &quot;ENSMUSG00000020333&quot; &quot;ENSMUSG00000000538&quot;
+[388] &quot;ENSMUSG00000041329&quot; &quot;ENSMUSG00000018574&quot; &quot;ENSMUSG00000020828&quot;
+[391] &quot;ENSMUSG00000020827&quot; &quot;ENSMUSG00000020821&quot; &quot;ENSMUSG00000020774&quot;
+[394] &quot;ENSMUSG00000017631&quot; &quot;ENSMUSG00000017453&quot; &quot;ENSMUSG00000061981&quot;
+[397] &quot;ENSMUSG00000019437&quot; &quot;ENSMUSG00000010277&quot; &quot;ENSMUSG00000017390&quot;
+[400] &quot;ENSMUSG00000017344&quot; &quot;ENSMUSG00000069769&quot; &quot;ENSMUSG00000020541&quot;
+[403] &quot;ENSMUSG00000020864&quot; &quot;ENSMUSG00000076435&quot; &quot;ENSMUSG00000001555&quot;
+[406] &quot;ENSMUSG00000050288&quot; &quot;ENSMUSG00000020932&quot; &quot;ENSMUSG00000001983&quot;
+[409] &quot;ENSMUSG00000041895&quot; &quot;ENSMUSG00000000567&quot; &quot;ENSMUSG00000041598&quot;
+[412] &quot;ENSMUSG00000000202&quot; &quot;ENSMUSG00000020733&quot; &quot;ENSMUSG00000020734&quot;
+[415] &quot;ENSMUSG00000034471&quot; &quot;ENSMUSG00000020777&quot; &quot;ENSMUSG00000025576&quot;
+[418] &quot;ENSMUSG00000066643&quot; &quot;ENSMUSG00000020591&quot; &quot;ENSMUSG00000020646&quot;
+[421] &quot;ENSMUSG00000036333&quot; &quot;ENSMUSG00000036095&quot; &quot;ENSMUSG00000020598&quot;
+[424] &quot;ENSMUSG00000002688&quot; &quot;ENSMUSG00000035133&quot; &quot;ENSMUSG00000021071&quot;
+[427] &quot;ENSMUSG00000019718&quot; &quot;ENSMUSG00000021048&quot; &quot;ENSMUSG00000059970&quot;
+[430] &quot;ENSMUSG00000015143&quot; &quot;ENSMUSG00000042734&quot; &quot;ENSMUSG00000021226&quot;
+[433] &quot;ENSMUSG00000072949&quot; &quot;ENSMUSG00000021238&quot; &quot;ENSMUSG00000021033&quot;
+[436] &quot;ENSMUSG00000020961&quot; &quot;ENSMUSG00000021182&quot; &quot;ENSMUSG00000021091&quot;
+[439] &quot;ENSMUSG00000021277&quot; &quot;ENSMUSG00000021318&quot; &quot;ENSMUSG00000021338&quot;
+[442] &quot;ENSMUSG00000035936&quot; &quot;ENSMUSG00000021340&quot; &quot;ENSMUSG00000021417&quot;
+[445] &quot;ENSMUSG00000021420&quot; &quot;ENSMUSG00000021373&quot; &quot;ENSMUSG00000021376&quot;
+[448] &quot;ENSMUSG00000021379&quot; &quot;ENSMUSG00000021536&quot; &quot;ENSMUSG00000034488&quot;
+[451] &quot;ENSMUSG00000021670&quot; &quot;ENSMUSG00000034751&quot; &quot;ENSMUSG00000021709&quot;
+[454] &quot;ENSMUSG00000021756&quot; &quot;ENSMUSG00000021760&quot; &quot;ENSMUSG00000042284&quot;
+[457] &quot;ENSMUSG00000021750&quot; &quot;ENSMUSG00000034235&quot; &quot;ENSMUSG00000021820&quot;
+[460] &quot;ENSMUSG00000021823&quot; &quot;ENSMUSG00000039197&quot; &quot;ENSMUSG00000021782&quot;
+[463] &quot;ENSMUSG00000055538&quot; &quot;ENSMUSG00000021884&quot; &quot;ENSMUSG00000021900&quot;
+[466] &quot;ENSMUSG00000021906&quot; &quot;ENSMUSG00000021794&quot; &quot;ENSMUSG00000021792&quot;
+[469] &quot;ENSMUSG00000037712&quot; &quot;ENSMUSG00000037697&quot; &quot;ENSMUSG00000004558&quot;
+[472] &quot;ENSMUSG00000040997&quot; &quot;ENSMUSG00000000959&quot; &quot;ENSMUSG00000022210&quot;
+[475] &quot;ENSMUSG00000002332&quot; &quot;ENSMUSG00000040055&quot; &quot;ENSMUSG00000021986&quot;
+[478] &quot;ENSMUSG00000021939&quot; &quot;ENSMUSG00000021273&quot; &quot;ENSMUSG00000022037&quot;
+[481] &quot;ENSMUSG00000022040&quot; &quot;ENSMUSG00000058997&quot; &quot;ENSMUSG00000022018&quot;
+[484] &quot;ENSMUSG00000022122&quot; &quot;ENSMUSG00000022112&quot; &quot;ENSMUSG00000061517&quot;
+[487] &quot;ENSMUSG00000022132&quot; &quot;ENSMUSG00000025545&quot; &quot;ENSMUSG00000022146&quot;
+[490] &quot;ENSMUSG00000054263&quot; &quot;ENSMUSG00000005360&quot; &quot;ENSMUSG00000022253&quot;
+[493] &quot;ENSMUSG00000022272&quot; &quot;ENSMUSG00000022240&quot; &quot;ENSMUSG00000022235&quot;
+[496] &quot;ENSMUSG00000022323&quot; &quot;ENSMUSG00000038679&quot; &quot;ENSMUSG00000060429&quot;
+[499] &quot;ENSMUSG00000071757&quot; &quot;ENSMUSG00000022351&quot; &quot;ENSMUSG00000022376&quot;
+[502] &quot;ENSMUSG00000022574&quot; &quot;ENSMUSG00000075590&quot; &quot;ENSMUSG00000022565&quot;
+[505] &quot;ENSMUSG00000022562&quot; &quot;ENSMUSG00000022546&quot; &quot;ENSMUSG00000044986&quot;
+[508] &quot;ENSMUSG00000049521&quot; &quot;ENSMUSG00000033006&quot; &quot;ENSMUSG00000042109&quot;
+[511] &quot;ENSMUSG00000022474&quot; &quot;ENSMUSG00000022452&quot; &quot;ENSMUSG00000061740&quot;
+[514] &quot;ENSMUSG00000058586&quot; &quot;ENSMUSG00000035805&quot; &quot;ENSMUSG00000055782&quot;
+[517] &quot;ENSMUSG00000033065&quot; &quot;ENSMUSG00000022489&quot; &quot;ENSMUSG00000022490&quot;
+[520] &quot;ENSMUSG00000057880&quot; &quot;ENSMUSG00000068663&quot; &quot;ENSMUSG00000022678&quot;
+[523] &quot;ENSMUSG00000018830&quot; &quot;ENSMUSG00000003526&quot; &quot;ENSMUSG00000005958&quot;
+[526] &quot;ENSMUSG00000022853&quot; &quot;ENSMUSG00000033306&quot; &quot;ENSMUSG00000038094&quot;
+[529] &quot;ENSMUSG00000022801&quot; &quot;ENSMUSG00000035376&quot; &quot;ENSMUSG00000053062&quot;
+[532] &quot;ENSMUSG00000022949&quot; &quot;ENSMUSG00000022947&quot; &quot;ENSMUSG00000040681&quot;
+[535] &quot;ENSMUSG00000023861&quot; &quot;ENSMUSG00000023909&quot; &quot;ENSMUSG00000016946&quot;
+[538] &quot;ENSMUSG00000033597&quot; &quot;ENSMUSG00000024169&quot; &quot;ENSMUSG00000024039&quot;
+[541] &quot;ENSMUSG00000048440&quot; &quot;ENSMUSG00000073424&quot; &quot;ENSMUSG00000073418&quot;
+[544] &quot;ENSMUSG00000023921&quot; &quot;ENSMUSG00000023913&quot; &quot;ENSMUSG00000023951&quot;
+[547] &quot;ENSMUSG00000023966&quot; &quot;ENSMUSG00000038545&quot; &quot;ENSMUSG00000024228&quot;
+[550] &quot;ENSMUSG00000003279&quot; &quot;ENSMUSG00000054469&quot; &quot;ENSMUSG00000024109&quot;
+[553] &quot;ENSMUSG00000002475&quot; &quot;ENSMUSG00000024411&quot; &quot;ENSMUSG00000024304&quot;
+[556] &quot;ENSMUSG00000024302&quot; &quot;ENSMUSG00000037815&quot; &quot;ENSMUSG00000024347&quot;
+[559] &quot;ENSMUSG00000051678&quot; &quot;ENSMUSG00000036585&quot; &quot;ENSMUSG00000036452&quot;
+[562] &quot;ENSMUSG00000024500&quot; &quot;ENSMUSG00000071856&quot; &quot;ENSMUSG00000054477&quot;
+[565] &quot;ENSMUSG00000024538&quot; &quot;ENSMUSG00000053644&quot; &quot;ENSMUSG00000024620&quot;
+[568] &quot;ENSMUSG00000024533&quot; &quot;ENSMUSG00000036880&quot; &quot;ENSMUSG00000059336&quot;
+[571] &quot;ENSMUSG00000024645&quot; &quot;ENSMUSG00000024900&quot; &quot;ENSMUSG00000024892&quot;
+[574] &quot;ENSMUSG00000092274&quot; &quot;ENSMUSG00000024799&quot; &quot;ENSMUSG00000024960&quot;
+[577] &quot;ENSMUSG00000024758&quot; &quot;ENSMUSG00000024665&quot; &quot;ENSMUSG00000046805&quot;
+[580] &quot;ENSMUSG00000053279&quot; &quot;ENSMUSG00000052387&quot; &quot;ENSMUSG00000024812&quot;
+[583] &quot;ENSMUSG00000041731&quot; &quot;ENSMUSG00000024827&quot; &quot;ENSMUSG00000024899&quot;
+[586] &quot;ENSMUSG00000025006&quot; &quot;ENSMUSG00000025203&quot; &quot;ENSMUSG00000025026&quot;
+[589] &quot;ENSMUSG00000024978&quot; &quot;ENSMUSG00000008035&quot; &quot;ENSMUSG00000025037&quot;
+[592] &quot;ENSMUSG00000040147&quot; &quot;ENSMUSG00000031111&quot; &quot;ENSMUSG00000023092&quot;
+[595] &quot;ENSMUSG00000036790&quot; &quot;ENSMUSG00000031337&quot; &quot;ENSMUSG00000031349&quot;
+[598] &quot;ENSMUSG00000045103&quot; &quot;ENSMUSG00000015668&quot; &quot;ENSMUSG00000034160&quot;
+[601] &quot;ENSMUSG00000034055&quot; &quot;ENSMUSG00000031232&quot; &quot;ENSMUSG00000031373&quot;
+[604] &quot;ENSMUSG00000031342&quot;
+
+$B.cell
+[1] &quot;ENSMUSG00000026395&quot; &quot;ENSMUSG00000031997&quot; &quot;ENSMUSG00000024610&quot;
+
+$Basket.cell
+ [1] &quot;ENSMUSG00000026452&quot; &quot;ENSMUSG00000038026&quot; &quot;ENSMUSG00000026610&quot;
+ [4] &quot;ENSMUSG00000069132&quot; &quot;ENSMUSG00000050192&quot; &quot;ENSMUSG00000039037&quot;
+ [7] &quot;ENSMUSG00000059447&quot; &quot;ENSMUSG00000031558&quot; &quot;ENSMUSG00000061762&quot;
+[10] &quot;ENSMUSG00000035158&quot; &quot;ENSMUSG00000030337&quot; &quot;ENSMUSG00000030199&quot;
+[13] &quot;ENSMUSG00000039405&quot; &quot;ENSMUSG00000030785&quot; &quot;ENSMUSG00000007594&quot;
+[16] &quot;ENSMUSG00000045414&quot; &quot;ENSMUSG00000020000&quot; &quot;ENSMUSG00000020396&quot;
+[19] &quot;ENSMUSG00000056427&quot; &quot;ENSMUSG00000048616&quot; &quot;ENSMUSG00000021676&quot;
+[22] &quot;ENSMUSG00000021647&quot; &quot;ENSMUSG00000046546&quot;</code></pre>
+<p>Finally, store the quality controlled, normalized and processed data.</p>
+<pre class="r"><code>saveRDS(spe.filt, file=file.path(&quot;_processed_data&quot;,
+                                 &quot;spe.filt.mouse_brain.rds&quot;))
+
+saveRDS(cell_types, file=file.path(&quot;_processed_data&quot;,
+                                 &quot;cell_types.mouse_brain.rds&quot;))</code></pre>
+</div>
+<div id="session-information" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Session information</h1>
+<pre class="r"><code>sessionInfo()
+R version 4.4.0 (2024-04-24)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 22.04.3 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=ca_ES.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=ca_ES.UTF-8        LC_COLLATE=ca_ES.UTF-8    
+ [5] LC_MONETARY=ca_ES.UTF-8    LC_MESSAGES=ca_ES.UTF-8   
+ [7] LC_PAPER=ca_ES.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=ca_ES.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/Madrid
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] dplyr_1.1.4                 openxlsx_4.2.5.2           
+ [3] RColorBrewer_1.1-3          scater_1.32.0              
+ [5] scran_1.32.0                patchwork_1.2.0            
+ [7] ggspavis_1.10.0             ggplot2_3.5.1              
+ [9] scuttle_1.14.0              TENxVisiumData_1.12.0      
+[11] SpatialExperiment_1.14.0    SingleCellExperiment_1.26.0
+[13] SummarizedExperiment_1.34.0 Biobase_2.64.0             
+[15] GenomicRanges_1.56.0        GenomeInfoDb_1.40.1        
+[17] IRanges_2.38.0              S4Vectors_0.42.0           
+[19] MatrixGenerics_1.16.0       matrixStats_1.3.0          
+[21] ExperimentHub_2.12.0        AnnotationHub_3.12.0       
+[23] BiocFileCache_2.12.0        dbplyr_2.5.0               
+[25] BiocGenerics_0.50.0         kableExtra_1.4.0           
+[27] knitr_1.47                  BiocStyle_2.32.0           
+
+loaded via a namespace (and not attached):
+  [1] rstudioapi_0.16.0         jsonlite_1.8.8           
+  [3] magrittr_2.0.3            ggbeeswarm_0.7.2         
+  [5] magick_2.8.3              rmarkdown_2.27           
+  [7] zlibbioc_1.50.0           vctrs_0.6.5              
+  [9] memoise_2.0.1             DelayedMatrixStats_1.26.0
+ [11] htmltools_0.5.8.1         S4Arrays_1.4.1           
+ [13] curl_5.2.1                BiocNeighbors_1.22.0     
+ [15] SparseArray_1.4.8         sass_0.4.9               
+ [17] bslib_0.7.0               cachem_1.1.0             
+ [19] igraph_2.0.3              lifecycle_1.0.4          
+ [21] ggside_0.3.1              pkgconfig_2.0.3          
+ [23] rsvd_1.0.5                Matrix_1.7-0             
+ [25] R6_2.5.1                  fastmap_1.2.0            
+ [27] GenomeInfoDbData_1.2.12   digest_0.6.35            
+ [29] colorspace_2.1-0          AnnotationDbi_1.66.0     
+ [31] dqrng_0.4.1               irlba_2.3.5.1            
+ [33] RSQLite_2.3.7             beachmat_2.20.0          
+ [35] filelock_1.0.3            fansi_1.0.6              
+ [37] httr_1.4.7                abind_1.4-5              
+ [39] compiler_4.4.0            bit64_4.0.5              
+ [41] withr_3.0.0               BiocParallel_1.38.0      
+ [43] viridis_0.6.5             DBI_1.2.2                
+ [45] rappdirs_0.3.3            DelayedArray_0.30.1      
+ [47] rjson_0.2.21              bluster_1.14.0           
+ [49] tools_4.4.0               vipor_0.4.7              
+ [51] beeswarm_0.4.0            zip_2.3.1                
+ [53] glue_1.7.0                grid_4.4.0               
+ [55] cluster_2.1.2             generics_0.1.3           
+ [57] gtable_0.3.5              BiocSingular_1.20.0      
+ [59] ScaledMatrix_1.12.0       metapod_1.12.0           
+ [61] xml2_1.3.6                utf8_1.2.4               
+ [63] XVector_0.44.0            ggrepel_0.9.5            
+ [65] BiocVersion_3.19.1        pillar_1.9.0             
+ [67] stringr_1.5.1             limma_3.60.2             
+ [69] lattice_0.20-45           bit_4.0.5                
+ [71] tidyselect_1.2.1          locfit_1.5-9.9           
+ [73] Biostrings_2.72.0         gridExtra_2.3            
+ [75] bookdown_0.39             edgeR_4.2.0              
+ [77] svglite_2.1.3             xfun_0.44                
+ [79] statmod_1.5.0             stringi_1.8.4            
+ [81] UCSC.utils_1.0.0          yaml_2.3.8               
+ [83] evaluate_0.23             codetools_0.2-18         
+ [85] tibble_3.2.1              BiocManager_1.30.23      
+ [87] cli_3.6.2                 systemfonts_1.1.0        
+ [89] munsell_0.5.1             jquerylib_0.1.4          
+ [91] Rcpp_1.0.12               png_0.1-8                
+ [93] parallel_4.4.0            blob_1.2.4               
+ [95] sparseMatrixStats_1.16.0  viridisLite_0.4.2        
+ [97] scales_1.3.0              crayon_1.5.2             
+ [99] rlang_1.1.3               KEGGREST_1.44.0          </code></pre>
+</div>
+<div id="references" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> References</h1>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": {
+      styles: {
+        ".MathJax_Display": {
+           "text-align": "center",
+           padding: "0px 150px 0px 65px",
+           margin: "0px 0px 0.5em"
+        },
+        "@media screen and (max-width: 991px)": {
+            ".MathJax_Display": {
+               "text-align": "center",
+               padding: "0 0 0 0"
+            }
+         }
+      }
+    }
+  });
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<script type="text/javascript">
+$(document).ready(function ()  {
+  
+  // Map "enter" keypress to the same action as a cursor click
+  function navigateLink(e) {
+    if (e.key === "Enter") {
+      $(this).trigger("click");
+    }
+  }
+
+  var toc_items = document.querySelectorAll(".tocify-item");
+  for (var i = 0; i < toc_items.length; i++) {
+    // The link role tells screen readers this is for navigation
+    toc_items.item(i).setAttribute("role", "link");
+    // tabindex = 0 allows selection via keyboard tab presses
+    toc_items.item(i).setAttribute("tabindex", "0");
+    // Listen for "Enter" keypress when item is selected
+    toc_items.item(i).addEventListener("keydown", navigateLink);
+  }
+});
+</script>
+
+</body>
+</html>

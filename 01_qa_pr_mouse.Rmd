@@ -1,0 +1,309 @@
+---
+title: GSVA analysis mouse brain data
+author: 
+- name: Pere Moles
+  affiliation:
+  - &id Dept. of Medicine and Life Sciences, Universitat Pompeu Fabra
+  email: pere.moles@upf.edu
+date: "`r format(Sys.time(), '%B %e, %Y')`"
+abstract: >
+  Here we perform a GSVA analysis of the 10x Visium mouse brain data.
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+    fig_captions: yes
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: _bibliography.bib
+---
+
+```{r setup, echo=FALSE, cache=FALSE}
+library(knitr)
+library(kableExtra)
+
+
+knitr::opts_chunk$set(
+  collapse=TRUE,
+  comment="",
+  fig.align="center",
+  fig.wide=TRUE,
+  cache=TRUE,
+  cache.path="_cache/__QA_mouse",
+  cache.extra=R.version.string,
+  autodep=TRUE
+)
+```
+
+# Download data
+
+We start by downloading the data, following the instructions at
+http://research.libd.org/spatialLIBD/articles/spatialLIBD.html
+
+```{r, message=FALSE}
+
+library(TENxVisiumData)
+library(SpatialExperiment)
+
+spe <- MouseBrainSagittalAnterior()
+spe <- spe[, colData(spe)$sample_id == "MouseBrainSagittalAnterior1"]
+```
+
+This is the row data.
+
+```{r}
+rowData(spe)
+```
+This is the colum data. We have multiple samples and a few thousand spots per
+sample.
+
+```{r}
+colData(spe)
+table(colData(spe)$sample_id)
+```
+For simplicity, we are going to analyze here only the sample with
+identifier `MouseBrainSagittalAnterior1`.
+
+```{r}
+spe <- spe[, colData(spe)$sample_id %in% "MouseBrainSagittalAnterior1"]
+dim(spe)
+```
+There is an indicator column called `in_tissue` for identifying spots
+overlapping the tissue, but apparently all spots have such a condition.
+
+```{r}
+stopifnot(all(colData(spe)$in_tissue))
+```
+
+This is the internal column metadata.
+
+```{r}
+int_colData(spe)
+```
+
+# Quality assessment
+
+Identify mitochondrial (MT) genes, here the column with the gene HUGO symbols
+is called `gene_name`.
+
+```{r}
+is_mito <- grepl("(^MT-)|(^mt-)", rowData(spe)$gene_name)
+table(is_mito)
+rowData(spe)$gene_name[is_mito]
+```
+Add quality control metrics.
+
+```{r, message=FALSE}
+library(scuttle)
+library(ggspavis)
+library(patchwork)
+
+spe <- addPerCellQC(spe, subsets=list(mito=is_mito))
+```
+Explore sequencing depth in UMI counts per spot. Figure
+\@ref(fig:mousetissueUMIcntxspot) shows in the tissue image the spatial
+pattern of sequencing depth in UMI counts per spot.
+
+```{r mousetissueUMIcntxspot, fig.height=5, fig.width=5, out.width="600px", fig.cap="Spatial pattern of sequencing depth per spot in UMI counts.", dpi=100}
+## image seems to be reversed and for this reason we set x_coord="pxl_col_in_fullres"
+## and y_coord="pxl_row_in_fullres"
+plotVisium(spe, x_coord="pxl_row_in_fullres",
+           y_coord="pxl_col_in_fullres",
+           annotate="sum", point_size=1,
+           pal=c("skyblue", "darkred"), facets=NULL)
+```
+
+Figure \@ref(fig:mouseUMIcntxspot)a
+shows the frequency distribution of UMI counts per spot and panels (b) to (d)
+show the spatial distribution of discarded spots at different cutoffs of
+sequencing depth (2000, 1000 and 700).
+
+```{r mouseUMIcntxspot, fig.height=7, fig.width=7, out.width="800px", fig.cap="Sequencing depth per spot in UMI counts. (a) Frequency distribution of UMI counts, where vertical lines indicate possible cutoff UMI count values below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values."}
+hp <- ggplot(data=colData(spe), aes(x=sum)) +
+        geom_histogram(bins=40) +
+        labs(x="UMI counts per spot", y="Frequency", tag="a") +
+        geom_vline(aes(xintercept=2000), col="darkgreen") +
+        geom_vline(aes(xintercept=1000), col="darkorange") +
+        geom_vline(aes(xintercept=700), col="darkred")
+colData(spe)$qc_lib_size <- colData(spe)$sum < 2000
+qp2k <- plotSpotQC(spe, plot_type="spot", annotate="qc_lib_size") +
+          theme(legend.position="none") + labs(tag="b")
+colData(spe)$qc_lib_size <- colData(spe)$sum < 1000
+qp1k <- plotSpotQC(spe, plot_type="spot", annotate="qc_lib_size") +
+          theme(legend.position="none") + labs(tag="c")
+colData(spe)$qc_lib_size <- colData(spe)$sum < 700
+qp700 <- plotSpotQC(spe, plot_type="spot", annotate="qc_lib_size") +
+          theme(legend.position="none") + labs(tag="d")
+(hp | qp2k) / (qp1k | qp700)
+```
+
+Explore number of genes with non-zero UMI counts per spot. Figure
+\@ref(fig:mousenonzeroUMIcntxspot)a shows the frequency distribution of genes
+per spot with non-zero UMI counts, while panels (b) do (d)
+show the spatial distribution of discarded spots at different cutoffs of
+sequencing depth (1000, 750 and 500).
+
+
+```{r mousenonzeroUMIcntxspot, fig.height=7, fig.width=7, out.width="800px", fig.cap="Non-zero UMI counts per spot. (a) Frequency distribution of non-zero UMI counts per spot, where vertical lines indicate possible cutoff values in the number of genes with non-zero UMI counts, below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values."}
+hp <- ggplot(data=colData(spe), aes(x=detected)) +
+        geom_histogram(bins=40) +
+        labs(x="Genes with non-zero UMI counts per spot",
+             y="Frequency", tag="a") +
+        geom_vline(aes(xintercept=1000), col="darkgreen") +
+        geom_vline(aes(xintercept=750), col="darkorange") +
+        geom_vline(aes(xintercept=500), col="darkred")
+colData(spe)$qc_detected <- colData(spe)$detected < 1000
+qp1k <- plotSpotQC(spe, plot_type="spot", annotate="qc_detected") +
+          theme(legend.position="none") + labs(tag="b")
+colData(spe)$qc_detected <- colData(spe)$detected < 750
+qp750 <- plotSpotQC(spe, plot_type="spot", annotate="qc_detected") +
+          theme(legend.position="none") + labs(tag="c")
+colData(spe)$qc_detected <- colData(spe)$detected < 500
+qp500 <- plotSpotQC(spe, plot_type="spot", annotate="qc_detected") +
+          theme(legend.position="none") + labs(tag="d")
+(hp | qp1k) / (qp750 | qp500)
+```
+Figure \@ref(fig:mouseMTUMIcntxspot) shows the proportion of MT UMI counts per
+spot.
+
+```{r mouseMTUMIcntxspot, fig.height=7, fig.width=7, out.width="800px", fig.cap="Mitochondrial UMI counts per spot. (a) Frequency distribution of the proportion of mitochondrial UMI counts per spot, where vertical lines indicate possible cutoff values in the proportion of UMI counts from mitochondrial genes, above which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values."}
+hp <- ggplot(data=colData(spe), aes(x=subsets_mito_percent)) +
+        geom_histogram(bins=40) +
+        labs(x="Proportion of mitochondrial UMI counts per spot",
+             y="Frequency", tag="a") +
+        geom_vline(aes(xintercept=25), col="darkgreen") +
+        geom_vline(aes(xintercept=27), col="darkorange") +
+        geom_vline(aes(xintercept=29), col="darkred")
+colData(spe)$qc_mito <- colData(spe)$subsets_mito_percent > 25
+qp25 <- plotSpotQC(spe, plot_type="spot", annotate="qc_mito") +
+          theme(legend.position="none") + labs(tag="b")
+colData(spe)$qc_mito <- colData(spe)$subsets_mito_percent > 27
+qp27 <- plotSpotQC(spe, plot_type="spot", annotate="qc_mito") +
+          theme(legend.position="none") + labs(tag="c")
+colData(spe)$qc_mito <- colData(spe)$subsets_mito_percent > 29
+qp29 <- plotSpotQC(spe, plot_type="spot", annotate="qc_mito") +
+          theme(legend.position="none") + labs(tag="d")
+(hp | qp25) / (qp27 | qp29)
+```
+We use the more lenient cutoff values in the previous three
+QC metrics, which lead to the following amount of discarded
+spots per metric.
+
+```{r}
+colData(spe)$discard <- colData(spe)$qc_lib_size |
+                        colData(spe)$qc_detected |
+                        colData(spe)$qc_mito
+table(colData(spe)$discard)
+```
+Figure \@ref(fig:mousediscardedspots) below shows the spatial pattern of the
+discarded spots.
+
+```{r mousediscardedspots, fig.height=4, fig.width=8, out.width="800px", fig.cap="Spatial pattern of discarded spots. (a) Discarded spots highlighted in red in the spot grid. (b) Discarded spots highlighted in blue in the tissue plot."}
+pqc <- plotSpotQC(spe, plot_type="spot", annotate="discard") +
+         theme(legend.position="none") + labs(tag="a")
+## image seems to be reversed and for this reason we set x_coord="pxl_col_in_fullres"
+## and y_coord="pxl_row_in_fullres"
+pts <- plotVisium(spe, x_coord="pxl_row_in_fullres", facets=NULL,
+                  y_coord="pxl_col_in_fullres", annotate="discard") +
+         labs(tag="b") + theme(legend.position="none")
+(pqc | pts)
+```
+Finally, we filter out these low-quality spots.
+
+```{r}
+dim(spe)
+spe <- spe[, !colData(spe)$discard]
+dim(spe)
+```
+
+# Filter lowly-expressed genes
+
+Figure \@ref(fig:mouseUMIcntxgene) shows the empirical distribution of UMI
+counts per gene.
+
+```{r mouseUMIcntxgene, fig.height=4, fig.width=6, out.width="500px", fig.cap="UMI counts per gene. The vertical red line shows a cutoff value below which we discard lowly-expressed genes."}
+cntxgene <- rowSums(assays(spe)$counts)+1
+plot.ecdf(cntxgene, xaxt="n", panel.first=grid(), xlab="UMI counts per gene",
+          las=1, log="x", xlim=c(1, 10e5), main="")
+axis(1, at=10^(0:5), labels=10^(0:5))
+abline(v=100, lwd=2, col="red")
+```
+We filter out genes with less than 100 counts throughout all spots.
+
+```{r}
+dim(spe)
+spe.filt <- spe[cntxgene > 100, ]
+dim(spe.filt)
+```
+
+# Normalization
+
+Calculate normalization factors and normalized expression values in logarithmic
+scale.
+
+```{r}
+spe.filt <- computeLibraryFactors(spe.filt)
+summary(sizeFactors(spe.filt))
+spe.filt <- logNormCounts(spe.filt)
+assayNames(spe.filt)
+assays(spe.filt)$logcounts[1:5, 1:4]
+```
+
+
+# Gene Sets preparation
+
+Load gene sets and select those with more than one gene annotated to brain and
+normal cell types.
+
+```{r, message=FALSE}
+library(openxlsx)
+library(dplyr)
+
+cellmarkers <- read.xlsx(file.path("_annotation_data", "Cell_marker_Mouse.xlsx"),
+                         rowNames=FALSE)
+dim(cellmarkers)
+head(cellmarkers, 3)
+mask <- !is.na(cellmarkers$Symbol) & !is.na(cellmarkers$GeneID)
+sum(mask)
+cellmarkers <- cellmarkers[mask, ]
+dim(cellmarkers)
+mask <- cellmarkers$tissue_class == "Brain" &
+        cellmarkers$cell_type == "Normal cell"
+mask[is.na(mask)] <- FALSE
+sum(mask)
+braincellmarkers <- cellmarkers[mask, ]
+head(sort(table(braincellmarkers$cell_name), decreasing=TRUE))
+cell_types <- split(braincellmarkers$Symbol, braincellmarkers$cell_name)
+length(cell_types)
+```
+Map gene identifiers to those in the `SpatialExperiment` object.
+
+```{r}
+cell_types <- lapply(cell_types,
+                     function(x, speids, spesyms)
+                       speids[spesyms %in% x],
+                     rownames(spe.filt), rowData(spe.filt)$symbol)
+cell_types <- cell_types[lengths(cell_types) > 1]
+length(cell_types)
+names(cell_types) <- make.names(names(cell_types))
+head(cell_types)
+```
+
+
+Finally, store the quality controlled, normalized and processed data.
+
+```{r}
+saveRDS(spe.filt, file=file.path("_processed_data",
+                                 "spe.filt.mouse_brain.rds"))
+
+saveRDS(cell_types, file=file.path("_processed_data",
+                                 "cell_types.mouse_brain.rds"))
+```
+
+# Session information
+
+```{r, child="_session-info.Rmd"}
+```
+
+# References

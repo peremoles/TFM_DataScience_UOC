@@ -1,10 +1,6 @@
-.DS_store
-.Rhistory
-.Rapp.history
-.RData
-.Ruserdata
-.Renviron
 .Rproj.user
-src/*.o
-src/*.so
-*~
+.Rhistory
+.DS_store
+.RData
+_cache
+.git

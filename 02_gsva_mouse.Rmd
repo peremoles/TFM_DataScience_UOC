@@ -1,0 +1,299 @@
+---
+title: GSVA analysis mouse brain data
+author: 
+- name: Pere Moles
+  affiliation:
+  - &id Dept. of Medicine and Life Sciences, Universitat Pompeu Fabra
+  email: pere.moles@upf.edu
+
+date: "`r format(Sys.time(), '%B %e, %Y')`"
+abstract: >
+  Here we perform a GSVA analysis of the mouse brain data.
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+    fig_captions: yes
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: _bibliography.bib
+---
+
+```{r setup, echo=FALSE, cache=FALSE}
+library(knitr)
+library(kableExtra)
+
+
+knitr::opts_chunk$set(
+  collapse=TRUE,
+  comment="",
+  fig.align="center",
+  fig.wide=TRUE,
+  cache=TRUE,
+  cache.path="_cache/__GS_mouse",
+  cache.extra=R.version.string,
+  autodep=TRUE
+)
+```
+
+# Import processed data
+
+Start by importing processed data.
+
+```{r, message=FALSE}
+library(SpatialExperiment)
+
+spe.filt <- readRDS(file.path("_processed_data", "spe.filt.mouse_brain.rds"))
+dim(spe.filt)
+
+cell_types <- readRDS(file.path("_processed_data", "cell_types.mouse_brain.rds"))
+```
+
+# Dimensionality reduction
+
+Select a subset of top highly-variable genes (HVGs).
+
+```{r}
+library(scran)
+
+dec <- modelGeneVar(spe.filt, assay.type="logcounts")
+```
+Figure \@ref(fig:mousemeanvar) shows the mean-variance relationship.
+
+```{r mousemeanvar, fig.height=4, fig.width=6, out.width="500px", fig.cap="Mean-variance relationship."}
+fit <- metadata(dec)
+plot(fit$mean, fit$var, xlab="mean of log-expression",
+     ylab="variance of log-expression")
+curve(fit$trend(x), col="dodgerblue", add=TRUE, lwd=2)
+```
+Select top 10% HVGs.
+
+```{r}
+top_hvgs <- getTopHVGs(dec, prop=0.1)
+length(top_hvgs)
+```
+Calculate PCA.
+
+```{r}
+library(scater)
+
+set.seed(123)
+spe.filt <- runPCA(spe.filt, subset_row=top_hvgs)
+
+reducedDimNames(spe.filt)
+dim(reducedDim(spe.filt, "PCA"))
+```
+
+# Clustering
+
+Here we perform a non-spatial graph-based clustering of the spots.
+
+```{r}
+k <- 30
+g <- buildSNNGraph(spe.filt, k=k, use.dimred="PCA")
+set.seed(123)
+g_walk <- igraph::cluster_walktrap(g)
+colLabels(spe.filt) <- factor(g_walk$membership)
+table(colLabels(spe.filt))
+```
+
+Figure \@ref(fig:mouseclustering) shows the clustering of the spots.
+
+```{r mouseclustering, message=FALSE, fig.height=5, fig.width=8, out.width="800px", dpi=100, fig.cap="Clustering of the spots."}
+library(RColorBrewer)
+library(patchwork)
+library(ggspavis)
+
+set.seed(123)
+pltcl <- plotVisium(spe.filt, x_coord="pxl_row_in_fullres",
+                    y_coord="pxl_col_in_fullres", point_size=1, annotate="label",
+                    pal=brewer.pal(nlevels(colLabels(spe.filt)), "Set1"))
+pltcl
+```
+
+
+# GSVA enrichment score estimation
+
+Run GSVA with default parameters.
+
+```{r, message=FALSE}
+library(GSVA)
+library(BiocParallel)
+
+gsvaPar <- gsvaParam(spe.filt, cell_types, assay="logcounts", kcdf = 'none',
+                     minSize=5)
+spe.filt.es <- gsva(gsvaPar, verbose=FALSE, BPPARAM=MulticoreParam(workers=3))
+dim(spe.filt.es)
+spe.filt.es
+```
+
+
+# Moran's I estimation
+
+Here we calculate Moran's I for each gene set in the GSVA
+enrichment scores (ES) calculated with default parameters.
+
+```{r, message=FALSE}
+library(SpatialFeatureExperiment)
+library(Voyager)
+
+sfe <- toSpatialFeatureExperiment(spe.filt.es)
+vg <- findVisiumGraph(spe.filt.es,
+                      sample_id="MouseBrainSagittalAnterior1",
+                      zero.policy=TRUE)
+colGraph(sfe, "visium", sample_id="MouseBrainSagittalAnterior1") <- vg
+
+moransi <- rowData(runUnivariate(sfe, type="moran.test", colGraphName="visium",
+                                 exprs_values="es", zero.policy=TRUE))
+moransi <- moransi[, 2:3]
+colnames(moransi) <- c("statistic", "p.value")
+```
+
+
+# Selection of autocorrelated gene sets
+
+Table \@ref(tab:gsbymoransi) below shows the subset of gene sets with
+significant nonzero Moran's I, in decreasing order, calculated from GSVA
+ES with default parameters.
+
+```{r}
+mask <- p.adjust(moransi$p.value, method="bonferroni") < 0.01
+sum(mask)
+moransi <- moransi[mask, ]
+dim(moransi)
+```
+
+```{r gsbymoransi, echo=FALSE}
+ktab <- kable(moransi[order(moransi$statistic, decreasing=TRUE), ], "html",
+              escape=FALSE, row.names=TRUE,
+              caption="Significantly autocorrelated gene sets, ordered by decreasing Morans'I.")
+ktab <- kable_styling(ktab,
+                      bootstrap_options=c("striped", "hover", "responsive"),
+                      fixed_thead=TRUE)
+kable_styling(ktab, position="center")
+```
+We subset the GSVA ES calculated with default parameters to those gene sets
+significantly autocorrelated with a Bonferroni FWER < 0.01, and a minimum
+Moran's I value of 0.4.
+
+```{r}
+sig.genesets <- rownames(moransi)[moransi$statistic > 40]
+spe.filt.es.sig <- spe.filt.es[rownames(spe.filt.es) %in% sig.genesets]
+dim(spe.filt.es.sig)
+```
+
+# Cluster annotation
+
+Here we use the previously selected autocorrelated gene sets to annotate
+the gene-level clusters. We first define the following function for that
+purpose, which takes as input an `SpatialExperiment` object with clusters
+annotated in the `label` column metadata, and return a vector with as many
+values as clusters and the most similar gene set for each cluster, in the
+corresponding position.
+
+```{r}
+clustertogeneset <- function(spe, p.value=0.01) {
+  require(limma)
+
+  y <- assay(spe)
+  f <- colData(spe)$label
+  stopifnot(is.factor(f) && length(f) > 1) ## QC
+  nl <- nlevels(f)
+  mod <- model.matrix(~ 0 + f)
+  genesets <- c()
+  for (targetcluster in levels(f)) {
+    fit <- lmFit(y, mod)
+    ## compare mean of the target cluster against the mean of
+    ## all other clusters
+    cf <- sprintf("f%s=f%s-(%s)/%s", targetcluster, targetcluster,
+                  paste(sprintf("f%s", setdiff(levels(f), targetcluster)),
+                        collapse="+"),
+                  nl-1)
+    contrast.matrix <- makeContrasts(contrasts=cf, levels=mod)
+    fit <- contrasts.fit(fit, contrast.matrix)
+    fit <- eBayes(fit)
+    tt <- topTable(fit, coef=1, n=Inf)
+    tt <- tt[tt$adj.P.Val < p.value, , drop=FALSE]
+    genesets <- c(genesets, rownames(tt)[1])
+  }
+  genesets
+}
+```
+Annotate gene sets to clusters and keep the unique ones using the GSVA ES
+calculated with default parameters.
+
+```{r, message=FALSE}
+annotatedgs <- clustertogeneset(spe.filt.es.sig)
+annotatedgs
+annotatedgs <- unique(annotatedgs)
+annotatedgs
+```
+Figure \@ref(fig:hcannotclusters) shows these unique gene sets that mostly
+correlated with some of the clusters.
+
+```{r hcannotclusters, echo=FALSE, message=FALSE, fig.height=10, fig.width=7, out.width="800px", dpi=100, fig.cap="Annotation of clusters with gene sets autocorrelated with GSVA ES calculated with default parameters. (a) Original tissue image. (b) Spot annotation by gene-level clustering. (c) to (h) enrichment scores for each of the significantly autocorrelated gene sets that mostly correlated with at least one of the gene-level clusters."}
+library(ggspavis)
+library(patchwork)
+library(RColorBrewer)
+
+set.seed(123)
+plts <- list(
+  original = plotVisium(spe.filt,
+                        x_coord="pxl_row_in_fullres",
+                        y_coord="pxl_col_in_fullres",
+                        point_size=0.25, facets=NULL) +
+            ggtitle("Original tissue") +
+            theme(plot.title = element_text(hjust = 0.5)) + 
+            labs(tag = "a"),
+  annotated = plotVisium(spe.filt, 
+                        x_coord="pxl_row_in_fullres",
+                        y_coord="pxl_col_in_fullres", 
+                        point_size = 1,
+                        annotate = "label", 
+                        facets = NULL,
+                        pal = brewer.pal(nlevels(colData(spe.filt)$label), "Set1")
+                        ) +
+            ggtitle("Cluster labels") +
+            theme(plot.title = element_text(hjust = 0.5)) + 
+            labs(tag = "b")
+)
+
+i <- 3
+for (gs in annotatedgs) {
+  plts[[gs]] <- plotVisium(spe.filt.es.sig, x_coord="pxl_row_in_fullres",
+                           y_coord="pxl_col_in_fullres", point_size=0.75,
+                           assay="es", annotate=gs, facets=NULL) +
+                      ggtitle(gs) + theme(plot.title=element_text(hjust=0.5)) +
+                      theme(legend.title=element_blank()) + labs(tag=letters[i])
+  i <- i + 1
+}
+wrap_plots(plts, nrow=ceiling(length(plts)/2))
+```
+Annotate gene sets to clusters and keep the unique ones using the GSVA ES
+calculated without kernel estimation.
+
+Finally, store the GSVA ES calculated with default parameters and without kernel
+estimation.
+
+```{r}
+saveRDS(spe.filt.es,
+        file=file.path("_processed_data",
+                       "spe.filt.es.mouse.rds"))
+```
+
+
+# Session information
+
+```{r, child="_session-info.Rmd"}
+```
+
+# References
+
+
+
+
+
+
+
+

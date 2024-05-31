@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>GSVA analysis mouse brain data</title>
+
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       </style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+  p.abstract{
+    text-align: center;
+    font-weight: bold;
+  }
+  div.abstract{
+    margin: auto;
+    width: 90%;
+  }
+</style>
+
+
+
+<link rel="stylesheet" href="/home/peremoles/R/x86_64-pc-linux-gnu-library/4.4/BiocStyle/resources/html/bioconductor.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 828px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 246px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+<script>
+function toggle_visibility(id1) {
+  var e = document.getElementById(id1);
+  e.style.display = ((e.style.display!="none") ? "none" : "block");
+}
+</script>
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">GSVA analysis of spatial transcriptomics data</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="01_qa_pr_mouse.html">QA &amp; processing mouse brain data</a>
+</li>
+<li>
+  <a href="02_gsva_mouse.html">GSVA analysis mouse brain data</a>
+</li>
+<li>
+  <a href="03_qa_pr_hdlpfc.html">QA &amp; processing human DLPFC data</a>
+</li>
+<li>
+  <a href="04_gsva_hdlpfc.html">GSVA analysis human DLPFC data</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">GSVA analysis mouse brain data</h1>
+<p class="author-name">Pere Moles<span class="affil-mark">1*</span></p>
+<p class="author-affiliation"><span class="affil-mark">1</span>Dept. of Medicine and Life Sciences, Universitat Pompeu Fabra</p>
+<p class="author-email"><span class="affil-mark">*</span><a href="mailto:pere.moles@upf.edu">pere.moles@upf.edu</a></p>
+<h4 class="date">de maig 31, 2024</h4>
+<h4 class="abstract">Abstract</h4>
+<p>Here we perform a GSVA analysis of the mouse brain data.</p>
+
+</div>
+
+
+<div id="import-processed-data" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Import processed data</h1>
+<p>Start by importing processed data.</p>
+<pre class="r"><code>library(SpatialExperiment)
+
+spe.filt &lt;- readRDS(file.path(&quot;_processed_data&quot;, &quot;spe.filt.mouse_brain.rds&quot;))
+dim(spe.filt)
+[1] 13469  2690</code></pre>
+<pre class="r"><code>
+cell_types &lt;- readRDS(file.path(&quot;_processed_data&quot;, &quot;cell_types.mouse_brain.rds&quot;))</code></pre>
+</div>
+<div id="dimensionality-reduction" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Dimensionality reduction</h1>
+<p>Select a subset of top highly-variable genes (HVGs).</p>
+<pre class="r"><code>library(scran)
+S&#39;està carregant el paquet requerit: scuttle</code></pre>
+<pre class="r"><code>
+dec &lt;- modelGeneVar(spe.filt, assay.type=&quot;logcounts&quot;)</code></pre>
+<p>Figure <a href="#fig:mousemeanvar">1</a> shows the mean-variance relationship.</p>
+<pre class="r"><code>fit &lt;- metadata(dec)
+plot(fit$mean, fit$var, xlab=&quot;mean of log-expression&quot;,
+     ylab=&quot;variance of log-expression&quot;)
+curve(fit$trend(x), col=&quot;dodgerblue&quot;, add=TRUE, lwd=2)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mousemeanvar"></span>
+<img src="02_gsva_mouse_files/figure-html/mousemeanvar-1.png" alt="Mean-variance relationship." width="500px"  class="widefigure" />
+<p class="caption">
+Figure 1: <span class="caption-title">Mean-variance relationship</span><br>
+</p>
+</div>
+<p>Select top 10% HVGs.</p>
+<pre class="r"><code>top_hvgs &lt;- getTopHVGs(dec, prop=0.1)
+length(top_hvgs)
+[1] 597</code></pre>
+<p>Calculate PCA.</p>
+<pre class="r"><code>library(scater)
+
+S&#39;està adjuntant el paquet: &#39;scater&#39;
+L&#39;objecte següent està emmascarat per &#39;package:limma&#39;:
+
+    plotMDS</code></pre>
+<pre class="r"><code>
+set.seed(123)
+spe.filt &lt;- runPCA(spe.filt, subset_row=top_hvgs)
+
+reducedDimNames(spe.filt)
+[1] &quot;PCA&quot;</code></pre>
+<pre class="r"><code>dim(reducedDim(spe.filt, &quot;PCA&quot;))
+[1] 2690   50</code></pre>
+</div>
+<div id="clustering" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Clustering</h1>
+<p>Here we perform a non-spatial graph-based clustering of the spots.</p>
+<pre class="r"><code>k &lt;- 30
+g &lt;- buildSNNGraph(spe.filt, k=k, use.dimred=&quot;PCA&quot;)
+set.seed(123)
+g_walk &lt;- igraph::cluster_walktrap(g)
+colLabels(spe.filt) &lt;- factor(g_walk$membership)
+table(colLabels(spe.filt))
+
+  1   2   3   4   5   6   7   8   9 
+355 260 383 548 185 555 155 116 133 </code></pre>
+<p>Figure <a href="#fig:mouseclustering">2</a> shows the clustering of the spots.</p>
+<pre class="r"><code>library(RColorBrewer)
+library(patchwork)
+library(ggspavis)
+
+set.seed(123)
+pltcl &lt;- plotVisium(spe.filt, x_coord=&quot;pxl_row_in_fullres&quot;,
+                    y_coord=&quot;pxl_col_in_fullres&quot;, point_size=1, annotate=&quot;label&quot;,
+                    pal=brewer.pal(nlevels(colLabels(spe.filt)), &quot;Set1&quot;))
+pltcl</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mouseclustering"></span>
+<img src="02_gsva_mouse_files/figure-html/mouseclustering-1.png" alt="Clustering of the spots." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 2: <span class="caption-title">Clustering of the spots</span><br>
+</p>
+</div>
+</div>
+<div id="gsva-enrichment-score-estimation" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> GSVA enrichment score estimation</h1>
+<p>Run GSVA with default parameters.</p>
+<pre class="r"><code>library(GSVA)
+library(BiocParallel)
+
+gsvaPar &lt;- gsvaParam(spe.filt, cell_types, assay=&quot;logcounts&quot;, kcdf = &#39;none&#39;,
+                     minSize=5)
+spe.filt.es &lt;- gsva(gsvaPar, verbose=FALSE, BPPARAM=MulticoreParam(workers=3))
+dim(spe.filt.es)
+[1]   58 2690</code></pre>
+<pre class="r"><code>spe.filt.es
+class: SpatialExperiment 
+dim: 58 2690 
+metadata(0):
+assays(1): es
+rownames(58): Activated.neural.stem.cell Astrocyte ... Vascular.cell
+  Ventral.otocyst
+rowData names(1): gs
+colnames(2690): AAACAAGTATCTCCCA-1 AAACACCAATAACTGC-1 ...
+  TTGTTTCACATCCAGG-1 TTGTTTCCATACAACT-1
+colData names(13): sample_id sum ... sizeFactor label
+reducedDimNames(0):
+mainExpName: NULL
+altExpNames(0):
+spatialCoords names(2) : pxl_col_in_fullres pxl_row_in_fullres
+imgData names(4): sample_id image_id data scaleFactor</code></pre>
+</div>
+<div id="morans-i-estimation" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Moran’s I estimation</h1>
+<p>Here we calculate Moran’s I for each gene set in the GSVA
+enrichment scores (ES) calculated with default parameters.</p>
+<pre class="r"><code>library(SpatialFeatureExperiment)
+library(Voyager)
+
+sfe &lt;- toSpatialFeatureExperiment(spe.filt.es)
+vg &lt;- findVisiumGraph(spe.filt.es,
+                      sample_id=&quot;MouseBrainSagittalAnterior1&quot;,
+                      zero.policy=TRUE)
+colGraph(sfe, &quot;visium&quot;, sample_id=&quot;MouseBrainSagittalAnterior1&quot;) &lt;- vg
+
+moransi &lt;- rowData(runUnivariate(sfe, type=&quot;moran.test&quot;, colGraphName=&quot;visium&quot;,
+                                 exprs_values=&quot;es&quot;, zero.policy=TRUE))
+moransi &lt;- moransi[, 2:3]
+colnames(moransi) &lt;- c(&quot;statistic&quot;, &quot;p.value&quot;)</code></pre>
+</div>
+<div id="selection-of-autocorrelated-gene-sets" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Selection of autocorrelated gene sets</h1>
+<p>Table <a href="#tab:gsbymoransi">1</a> below shows the subset of gene sets with
+significant nonzero Moran’s I, in decreasing order, calculated from GSVA
+ES with default parameters.</p>
+<pre class="r"><code>mask &lt;- p.adjust(moransi$p.value, method=&quot;bonferroni&quot;) &lt; 0.01
+sum(mask)
+[1] 58</code></pre>
+<pre class="r"><code>moransi &lt;- moransi[mask, ]
+dim(moransi)
+[1] 58  2</code></pre>
+<div class='horizontal-scroll'><table class="table table-striped table-hover table-responsive table" style="margin-left: auto; margin-right: auto; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:gsbymoransi">Table 1: </span>Significantly autocorrelated gene sets, ordered by decreasing Morans’I.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+statistic
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+D1.Medium.spiny.neuron.D1.MSN.
+</td>
+<td style="text-align:right;">
+70.112213
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pyramidal.cell
+</td>
+<td style="text-align:right;">
+66.905469
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Excitatory.neuron
+</td>
+<td style="text-align:right;">
+65.001666
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+O.cell
+</td>
+<td style="text-align:right;">
+64.037663
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Astrocyte
+</td>
+<td style="text-align:right;">
+63.485684
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mature.oligodendrocyte
+</td>
+<td style="text-align:right;">
+62.149120
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Oligodendrocyte
+</td>
+<td style="text-align:right;">
+61.290975
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+T.cell
+</td>
+<td style="text-align:right;">
+54.558845
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Neuroblast
+</td>
+<td style="text-align:right;">
+53.765997
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inhibitory.neuron
+</td>
+<td style="text-align:right;">
+53.407415
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Glial.cell
+</td>
+<td style="text-align:right;">
+53.371793
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Type.I.spiral.ganglion.neuron
+</td>
+<td style="text-align:right;">
+52.999580
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Choroid.plexus.cell
+</td>
+<td style="text-align:right;">
+52.770833
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+GABAergic.neuron
+</td>
+<td style="text-align:right;">
+52.071752
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Microglia.like.cell
+</td>
+<td style="text-align:right;">
+50.838740
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Stem.cell
+</td>
+<td style="text-align:right;">
+50.223662
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Neuron
+</td>
+<td style="text-align:right;">
+49.265061
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Olfactory.ensheathing.glia
+</td>
+<td style="text-align:right;">
+47.898842
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Neural.stem.cell
+</td>
+<td style="text-align:right;">
+47.020878
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Type.II.spiral.ganglion.neuron
+</td>
+<td style="text-align:right;">
+46.943942
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bergmann.glial.cell
+</td>
+<td style="text-align:right;">
+44.789579
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Quiescent.neural.stem.cell
+</td>
+<td style="text-align:right;">
+44.782195
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ependymal.cell
+</td>
+<td style="text-align:right;">
+43.974101
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Interneuron
+</td>
+<td style="text-align:right;">
+41.101818
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Activated.neural.stem.cell
+</td>
+<td style="text-align:right;">
+40.854245
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Endothelial.cell
+</td>
+<td style="text-align:right;">
+40.038634
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Progenitor.cell
+</td>
+<td style="text-align:right;">
+39.283470
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Glutamatergic.neuron
+</td>
+<td style="text-align:right;">
+39.273393
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Radial.glia.like.cell
+</td>
+<td style="text-align:right;">
+38.092897
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mural.cell
+</td>
+<td style="text-align:right;">
+37.795738
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dopaminergic.neuron
+</td>
+<td style="text-align:right;">
+37.685262
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cholinergic.interneuron
+</td>
+<td style="text-align:right;">
+37.501667
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Microglial.cell
+</td>
+<td style="text-align:right;">
+36.525574
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Long.projecting.GABAergic.cell
+</td>
+<td style="text-align:right;">
+34.150098
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Glutamatergic.cell
+</td>
+<td style="text-align:right;">
+33.181355
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Oligodendrocyte.precursor.cell
+</td>
+<td style="text-align:right;">
+32.969944
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Smooth.muscle.cell
+</td>
+<td style="text-align:right;">
+32.799445
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Intermediate.progenitor.cell
+</td>
+<td style="text-align:right;">
+32.745062
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Olfactory.sensory.neuron
+</td>
+<td style="text-align:right;">
+32.154517
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Type.IC.spiral.ganglion.neuron
+</td>
+<td style="text-align:right;">
+30.396834
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Basket.cell
+</td>
+<td style="text-align:right;">
+29.933274
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Interneuron.selective.cell
+</td>
+<td style="text-align:right;">
+26.927880
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Type.IB.spiral.ganglion.neuron
+</td>
+<td style="text-align:right;">
+24.904966
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Chandelier.cell
+</td>
+<td style="text-align:right;">
+24.126720
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cajal.Retzius.cell
+</td>
+<td style="text-align:right;">
+23.735126
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Vascular.cell
+</td>
+<td style="text-align:right;">
+23.602896
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Type.IA.spiral.ganglion.neuron
+</td>
+<td style="text-align:right;">
+22.546101
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Macrophage
+</td>
+<td style="text-align:right;">
+21.839764
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pericyte
+</td>
+<td style="text-align:right;">
+20.819822
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Martinotti.cell
+</td>
+<td style="text-align:right;">
+19.517813
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Upper.layer.2.cell
+</td>
+<td style="text-align:right;">
+18.774711
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Upper.layer.3.cell
+</td>
+<td style="text-align:right;">
+18.774711
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ventral.otocyst
+</td>
+<td style="text-align:right;">
+15.168993
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Early.neuroblast
+</td>
+<td style="text-align:right;">
+12.798337
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+T.helper.17.Th17..cell
+</td>
+<td style="text-align:right;">
+11.884489
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dorsal.otocyst
+</td>
+<td style="text-align:right;">
+10.947842
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CCK.basket.cell
+</td>
+<td style="text-align:right;">
+10.841554
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Border.associated.macrophage
+</td>
+<td style="text-align:right;">
+6.089364
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table></div>
+<p>We subset the GSVA ES calculated with default parameters to those gene sets
+significantly autocorrelated with a Bonferroni FWER &lt; 0.01, and a minimum
+Moran’s I value of 0.4.</p>
+<pre class="r"><code>sig.genesets &lt;- rownames(moransi)[moransi$statistic &gt; 40]
+spe.filt.es.sig &lt;- spe.filt.es[rownames(spe.filt.es) %in% sig.genesets]
+dim(spe.filt.es.sig)
+[1]   26 2690</code></pre>
+</div>
+<div id="cluster-annotation" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> Cluster annotation</h1>
+<p>Here we use the previously selected autocorrelated gene sets to annotate
+the gene-level clusters. We first define the following function for that
+purpose, which takes as input an <code>SpatialExperiment</code> object with clusters
+annotated in the <code>label</code> column metadata, and return a vector with as many
+values as clusters and the most similar gene set for each cluster, in the
+corresponding position.</p>
+<pre class="r"><code>clustertogeneset &lt;- function(spe, p.value=0.01) {
+  require(limma)
+
+  y &lt;- assay(spe)
+  f &lt;- colData(spe)$label
+  stopifnot(is.factor(f) &amp;&amp; length(f) &gt; 1) ## QC
+  nl &lt;- nlevels(f)
+  mod &lt;- model.matrix(~ 0 + f)
+  genesets &lt;- c()
+  for (targetcluster in levels(f)) {
+    fit &lt;- lmFit(y, mod)
+    ## compare mean of the target cluster against the mean of
+    ## all other clusters
+    cf &lt;- sprintf(&quot;f%s=f%s-(%s)/%s&quot;, targetcluster, targetcluster,
+                  paste(sprintf(&quot;f%s&quot;, setdiff(levels(f), targetcluster)),
+                        collapse=&quot;+&quot;),
+                  nl-1)
+    contrast.matrix &lt;- makeContrasts(contrasts=cf, levels=mod)
+    fit &lt;- contrasts.fit(fit, contrast.matrix)
+    fit &lt;- eBayes(fit)
+    tt &lt;- topTable(fit, coef=1, n=Inf)
+    tt &lt;- tt[tt$adj.P.Val &lt; p.value, , drop=FALSE]
+    genesets &lt;- c(genesets, rownames(tt)[1])
+  }
+  genesets
+}</code></pre>
+<p>Annotate gene sets to clusters and keep the unique ones using the GSVA ES
+calculated with default parameters.</p>
+<pre class="r"><code>annotatedgs &lt;- clustertogeneset(spe.filt.es.sig)
+annotatedgs
+[1] &quot;Oligodendrocyte&quot;                &quot;Astrocyte&quot;                     
+[3] &quot;Pyramidal.cell&quot;                 &quot;D1.Medium.spiny.neuron.D1.MSN.&quot;
+[5] &quot;Pyramidal.cell&quot;                 &quot;Pyramidal.cell&quot;                
+[7] &quot;Quiescent.neural.stem.cell&quot;     &quot;Pyramidal.cell&quot;                
+[9] &quot;Neuroblast&quot;                    </code></pre>
+<pre class="r"><code>annotatedgs &lt;- unique(annotatedgs)
+annotatedgs
+[1] &quot;Oligodendrocyte&quot;                &quot;Astrocyte&quot;                     
+[3] &quot;Pyramidal.cell&quot;                 &quot;D1.Medium.spiny.neuron.D1.MSN.&quot;
+[5] &quot;Quiescent.neural.stem.cell&quot;     &quot;Neuroblast&quot;                    </code></pre>
+<p>Figure <a href="#fig:hcannotclusters">3</a> shows these unique gene sets that mostly
+correlated with some of the clusters.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:hcannotclusters"></span>
+<img src="02_gsva_mouse_files/figure-html/hcannotclusters-1.png" alt="Annotation of clusters with gene sets autocorrelated with GSVA ES calculated with default parameters. (a) Original tissue image. (b) Spot annotation by gene-level clustering. (c) to (h) enrichment scores for each of the significantly autocorrelated gene sets that mostly correlated with at least one of the gene-level clusters." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 3: <span class="caption-title">Annotation of clusters with gene sets autocorrelated with GSVA ES calculated with default parameters</span><br>(a) Original tissue image. (b) Spot annotation by gene-level clustering. (c) to (h) enrichment scores for each of the significantly autocorrelated gene sets that mostly correlated with at least one of the gene-level clusters.
+</p>
+</div>
+<p>Annotate gene sets to clusters and keep the unique ones using the GSVA ES
+calculated without kernel estimation.</p>
+<p>Finally, store the GSVA ES calculated with default parameters and without kernel
+estimation.</p>
+<pre class="r"><code>saveRDS(spe.filt.es,
+        file=file.path(&quot;_processed_data&quot;,
+                       &quot;spe.filt.es.mouse.rds&quot;))</code></pre>
+</div>
+<div id="session-information" class="section level1" number="8">
+<h1><span class="header-section-number">8</span> Session information</h1>
+<pre class="r"><code>sessionInfo()
+R version 4.4.0 (2024-04-24)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 22.04.3 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=ca_ES.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=ca_ES.UTF-8        LC_COLLATE=ca_ES.UTF-8    
+ [5] LC_MONETARY=ca_ES.UTF-8    LC_MESSAGES=ca_ES.UTF-8   
+ [7] LC_PAPER=ca_ES.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=ca_ES.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/Madrid
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] scater_1.32.0                  scran_1.32.0                  
+ [3] scuttle_1.14.0                 RColorBrewer_1.1-3            
+ [5] patchwork_1.2.0                ggspavis_1.10.0               
+ [7] ggplot2_3.5.1                  limma_3.60.2                  
+ [9] Voyager_1.6.0                  SpatialFeatureExperiment_1.6.1
+[11] BiocParallel_1.38.0            GSVA_1.52.2                   
+[13] dplyr_1.1.4                    openxlsx_4.2.5.2              
+[15] SpatialExperiment_1.14.0       SingleCellExperiment_1.26.0   
+[17] SummarizedExperiment_1.34.0    Biobase_2.64.0                
+[19] GenomicRanges_1.56.0           GenomeInfoDb_1.40.1           
+[21] IRanges_2.38.0                 S4Vectors_0.42.0              
+[23] BiocGenerics_0.50.0            MatrixGenerics_1.16.0         
+[25] matrixStats_1.3.0              kableExtra_1.4.0              
+[27] knitr_1.47                     BiocStyle_2.32.0              
+
+loaded via a namespace (and not attached):
+  [1] bitops_1.0-7              tibble_3.2.1             
+  [3] R.oo_1.26.0               graph_1.82.0             
+  [5] XML_3.99-0.16.1           lifecycle_1.0.4          
+  [7] sf_1.0-16                 edgeR_4.2.0              
+  [9] lattice_0.20-45           magrittr_2.0.3           
+ [11] sass_0.4.9                rmarkdown_2.27           
+ [13] jquerylib_0.1.4           yaml_2.3.8               
+ [15] metapod_1.12.0            zip_2.3.1                
+ [17] ggside_0.3.1              sp_2.1-4                 
+ [19] DBI_1.2.2                 abind_1.4-5              
+ [21] zlibbioc_1.50.0           R.utils_2.12.3           
+ [23] RCurl_1.98-1.14           GenomeInfoDbData_1.2.12  
+ [25] ggrepel_0.9.5             irlba_2.3.5.1            
+ [27] terra_1.7-78              units_0.8-5              
+ [29] RSpectra_0.16-1           annotate_1.82.0          
+ [31] dqrng_0.4.1               svglite_2.1.3            
+ [33] DelayedMatrixStats_1.26.0 codetools_0.2-18         
+ [35] DropletUtils_1.24.0       DelayedArray_0.30.1      
+ [37] xml2_1.3.6                tidyselect_1.2.1         
+ [39] farver_2.1.2              UCSC.utils_1.0.0         
+ [41] memuse_4.2-3              viridis_0.6.5            
+ [43] ScaledMatrix_1.12.0       jsonlite_1.8.8           
+ [45] BiocNeighbors_1.22.0      e1071_1.7-14             
+ [47] systemfonts_1.1.0         tools_4.4.0              
+ [49] ggnewscale_0.4.10         Rcpp_1.0.12              
+ [51] glue_1.7.0                gridExtra_2.3            
+ [53] SparseArray_1.4.8         xfun_0.44                
+ [55] EBImage_4.46.0            HDF5Array_1.32.0         
+ [57] withr_3.0.0               BiocManager_1.30.23      
+ [59] fastmap_1.2.0             boot_1.3-28              
+ [61] rhdf5filters_1.16.0       bluster_1.14.0           
+ [63] fansi_1.0.6               spData_2.3.0             
+ [65] digest_0.6.35             rsvd_1.0.5               
+ [67] R6_2.5.1                  colorspace_2.1-0         
+ [69] wk_0.9.1                  jpeg_0.1-10              
+ [71] RSQLite_2.3.7             R.methodsS3_1.8.2        
+ [73] utf8_1.2.4                generics_0.1.3           
+ [75] data.table_1.15.4         class_7.3-20             
+ [77] httr_1.4.7                htmlwidgets_1.6.4        
+ [79] S4Arrays_1.4.1            spdep_1.3-3              
+ [81] pkgconfig_2.0.3           scico_1.5.0              
+ [83] gtable_0.3.5              blob_1.2.4               
+ [85] XVector_0.44.0            htmltools_0.5.8.1        
+ [87] bookdown_0.39             fftwtools_0.9-11         
+ [89] GSEABase_1.66.0           scales_1.3.0             
+ [91] png_0.1-8                 rstudioapi_0.16.0        
+ [93] rjson_0.2.21              proxy_0.4-27             
+ [95] cachem_1.1.0              rhdf5_2.48.0             
+ [97] stringr_1.5.1             KernSmooth_2.23-20       
+ [99] parallel_4.4.0            vipor_0.4.7              
+[101] AnnotationDbi_1.66.0      s2_1.1.6                 
+[103] pillar_1.9.0              grid_4.4.0               
+[105] vctrs_0.6.5               BiocSingular_1.20.0      
+[107] beachmat_2.20.0           xtable_1.8-4             
+[109] sfheaders_0.4.4           cluster_2.1.2            
+[111] beeswarm_0.4.0            evaluate_0.23            
+[113] tinytex_0.51              zeallot_0.1.0            
+[115] magick_2.8.3              cli_3.6.2                
+[117] locfit_1.5-9.9            compiler_4.4.0           
+[119] rlang_1.1.3               crayon_1.5.2             
+[121] labeling_0.4.3            classInt_0.4-10          
+[123] ggbeeswarm_0.7.2          stringi_1.8.4            
+[125] viridisLite_0.4.2         deldir_2.0-4             
+[127] munsell_0.5.1             Biostrings_2.72.0        
+[129] tiff_0.1-12               Matrix_1.7-0             
+[131] sparseMatrixStats_1.16.0  bit64_4.0.5              
+[133] Rhdf5lib_1.26.0           KEGGREST_1.44.0          
+[135] statmod_1.5.0             highr_0.11               
+[137] igraph_2.0.3              memoise_2.0.1            
+[139] bslib_0.7.0               bit_4.0.5                </code></pre>
+</div>
+<div id="references" class="section level1" number="9">
+<h1><span class="header-section-number">9</span> References</h1>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": {
+      styles: {
+        ".MathJax_Display": {
+           "text-align": "center",
+           padding: "0px 150px 0px 65px",
+           margin: "0px 0px 0.5em"
+        },
+        "@media screen and (max-width: 991px)": {
+            ".MathJax_Display": {
+               "text-align": "center",
+               padding: "0 0 0 0"
+            }
+         }
+      }
+    }
+  });
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<script type="text/javascript">
+$(document).ready(function ()  {
+  
+  // Map "enter" keypress to the same action as a cursor click
+  function navigateLink(e) {
+    if (e.key === "Enter") {
+      $(this).trigger("click");
+    }
+  }
+
+  var toc_items = document.querySelectorAll(".tocify-item");
+  for (var i = 0; i < toc_items.length; i++) {
+    // The link role tells screen readers this is for navigation
+    toc_items.item(i).setAttribute("role", "link");
+    // tabindex = 0 allows selection via keyboard tab presses
+    toc_items.item(i).setAttribute("tabindex", "0");
+    // Listen for "Enter" keypress when item is selected
+    toc_items.item(i).addEventListener("keydown", navigateLink);
+  }
+});
+</script>
+
+</body>
+</html>

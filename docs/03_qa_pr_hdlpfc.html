@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Quality assessment and processing of human DLPFC data</title>
+
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       </style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+  p.abstract{
+    text-align: center;
+    font-weight: bold;
+  }
+  div.abstract{
+    margin: auto;
+    width: 90%;
+  }
+</style>
+
+
+
+<link rel="stylesheet" href="/home/peremoles/R/x86_64-pc-linux-gnu-library/4.4/BiocStyle/resources/html/bioconductor.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 828px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 246px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+<script>
+function toggle_visibility(id1) {
+  var e = document.getElementById(id1);
+  e.style.display = ((e.style.display!="none") ? "none" : "block");
+}
+</script>
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">GSVA analysis of spatial transcriptomics data</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="01_qa_pr_mouse.html">QA &amp; processing mouse brain data</a>
+</li>
+<li>
+  <a href="02_gsva_mouse.html">GSVA analysis mouse brain data</a>
+</li>
+<li>
+  <a href="03_qa_pr_hdlpfc.html">QA &amp; processing human DLPFC data</a>
+</li>
+<li>
+  <a href="04_gsva_hdlpfc.html">GSVA analysis human DLPFC data</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Quality assessment and processing of human DLPFC data</h1>
+<p class="author-name">Pere Moles<span class="affil-mark">1*</span></p>
+<p class="author-affiliation"><span class="affil-mark">1</span>Dept. of Medicine and Life Sciences, Universitat Pompeu Fabra</p>
+<p class="author-email"><span class="affil-mark">*</span><a href="mailto:pere.moles@upf.edu">pere.moles@upf.edu</a></p>
+<h4 class="date">de maig 31, 2024</h4>
+<h4 class="abstract">Abstract</h4>
+<p>Here we perform a first exploratory analysis and quality assessment of the 10x Visium human dorsolateral pre-frontal cortex (DLPFC) data, and process it for its downstream analysis.</p>
+
+</div>
+
+
+<div id="download-data" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Download data</h1>
+<p>We start by downloading the data, following the instructions at
+<a href="http://research.libd.org/spatialLIBD/articles/spatialLIBD.html" class="uri">http://research.libd.org/spatialLIBD/articles/spatialLIBD.html</a></p>
+<pre class="r"><code>library(ExperimentHub)
+library(SpatialExperiment)
+library(spatialLIBD)
+
+ehub &lt;- ExperimentHub()
+spe &lt;- fetch_data(type=&quot;spe&quot;, eh=ehub)
+dim(spe)
+[1] 33538 47681</code></pre>
+<pre class="r"><code>spe
+class: SpatialExperiment 
+dim: 33538 47681 
+metadata(0):
+assays(2): counts logcounts
+rownames(33538): ENSG00000243485 ENSG00000237613 ... ENSG00000277475
+  ENSG00000268674
+rowData names(9): source type ... gene_search is_top_hvg
+colnames(47681): AAACAACGAATAGTTC-1 AAACAAGTATCTCCCA-1 ...
+  TTGTTTCCATACAACT-1 TTGTTTGTGTAAATTC-1
+colData names(69): sample_id Cluster ... array_row array_col
+reducedDimNames(6): PCA TSNE_perplexity50 ... TSNE_perplexity80
+  UMAP_neighbors15
+mainExpName: NULL
+altExpNames(0):
+spatialCoords names(2) : pxl_col_in_fullres pxl_row_in_fullres
+imgData names(4): sample_id image_id data scaleFactor</code></pre>
+<p>This is the row data.</p>
+<pre class="r"><code>rowData(spe)
+DataFrame with 33538 rows and 9 columns
+                        source     type         gene_id gene_version
+                      &lt;factor&gt; &lt;factor&gt;     &lt;character&gt;  &lt;character&gt;
+ENSG00000243485 havana             gene ENSG00000243485            5
+ENSG00000237613 havana             gene ENSG00000237613            2
+ENSG00000186092 ensembl_havana     gene ENSG00000186092            6
+ENSG00000238009 ensembl_havana     gene ENSG00000238009            6
+ENSG00000239945 havana             gene ENSG00000239945            1
+...                        ...      ...             ...          ...
+ENSG00000277856        ensembl     gene ENSG00000277856            1
+ENSG00000275063        ensembl     gene ENSG00000275063            1
+ENSG00000271254        ensembl     gene ENSG00000271254            6
+ENSG00000277475        ensembl     gene ENSG00000277475            1
+ENSG00000268674        ensembl     gene ENSG00000268674            2
+                  gene_name    gene_source   gene_biotype
+                &lt;character&gt;    &lt;character&gt;    &lt;character&gt;
+ENSG00000243485 MIR1302-2HG         havana        lincRNA
+ENSG00000237613     FAM138A         havana        lincRNA
+ENSG00000186092       OR4F5 ensembl_havana protein_coding
+ENSG00000238009  AL627309.1 ensembl_havana        lincRNA
+ENSG00000239945  AL627309.3         havana        lincRNA
+...                     ...            ...            ...
+ENSG00000277856  AC233755.2        ensembl protein_coding
+ENSG00000275063  AC233755.1        ensembl protein_coding
+ENSG00000271254  AC240274.1        ensembl protein_coding
+ENSG00000277475  AC213203.1        ensembl protein_coding
+ENSG00000268674     FAM231C        ensembl protein_coding
+                           gene_search is_top_hvg
+                           &lt;character&gt;  &lt;logical&gt;
+ENSG00000243485 MIR1302-2HG; ENSG000..      FALSE
+ENSG00000237613 FAM138A; ENSG0000023..      FALSE
+ENSG00000186092 OR4F5; ENSG00000186092      FALSE
+ENSG00000238009 AL627309.1; ENSG0000..      FALSE
+ENSG00000239945 AL627309.3; ENSG0000..      FALSE
+...                                ...        ...
+ENSG00000277856 AC233755.2; ENSG0000..      FALSE
+ENSG00000275063 AC233755.1; ENSG0000..      FALSE
+ENSG00000271254 AC240274.1; ENSG0000..      FALSE
+ENSG00000277475 AC213203.1; ENSG0000..      FALSE
+ENSG00000268674 FAM231C; ENSG0000026..      FALSE</code></pre>
+<p>This is the colum data. We have multiple samples and a few thousand spots per
+sample.</p>
+<pre class="r"><code>colData(spe)
+DataFrame with 47681 rows and 69 columns
+                     sample_id   Cluster   sum_umi  sum_gene     subject
+                   &lt;character&gt; &lt;integer&gt; &lt;numeric&gt; &lt;integer&gt; &lt;character&gt;
+AAACAACGAATAGTTC-1      151507         6       948       727      Br5292
+AAACAAGTATCTCCCA-1      151507         3      4261      2170      Br5292
+AAACAATCTACTAGCA-1      151507         2      1969      1093      Br5292
+AAACACCAATAACTGC-1      151507         5      3368      1896      Br5292
+AAACAGCTTTCAGAAG-1      151507         1      2981      1620      Br5292
+...                        ...       ...       ...       ...         ...
+TTGTTGTGTGTCAAGA-1      151676         5      2880      1638      Br8100
+TTGTTTCACATCCAGG-1      151676         2      2640      1526      Br8100
+TTGTTTCATTAGTCTA-1      151676         2      2063      1279      Br8100
+TTGTTTCCATACAACT-1      151676         7      1031       748      Br8100
+TTGTTTGTGTAAATTC-1      151676         1      2625      1392      Br8100
+                      position   replicate subject_position   discard
+                   &lt;character&gt; &lt;character&gt;      &lt;character&gt; &lt;logical&gt;
+AAACAACGAATAGTTC-1           0           1      Br5292_pos0     FALSE
+AAACAAGTATCTCCCA-1           0           1      Br5292_pos0     FALSE
+AAACAATCTACTAGCA-1           0           1      Br5292_pos0     FALSE
+AAACACCAATAACTGC-1           0           1      Br5292_pos0     FALSE
+AAACAGCTTTCAGAAG-1           0           1      Br5292_pos0     FALSE
+...                        ...         ...              ...       ...
+TTGTTGTGTGTCAAGA-1         300           2    Br8100_pos300     FALSE
+TTGTTTCACATCCAGG-1         300           2    Br8100_pos300     FALSE
+TTGTTTCATTAGTCTA-1         300           2    Br8100_pos300     FALSE
+TTGTTTCCATACAACT-1         300           2    Br8100_pos300     FALSE
+TTGTTTGTGTAAATTC-1         300           2    Br8100_pos300     FALSE
+                                      key cell_count SNN_k50_k4 SNN_k50_k5
+                              &lt;character&gt;  &lt;integer&gt;  &lt;integer&gt;  &lt;integer&gt;
+AAACAACGAATAGTTC-1 151507_AAACAACGAATAG..          0          1          1
+AAACAAGTATCTCCCA-1 151507_AAACAAGTATCTC..          3          1          1
+AAACAATCTACTAGCA-1 151507_AAACAATCTACTA..          2          3          2
+AAACACCAATAACTGC-1 151507_AAACACCAATAAC..          5          2          3
+AAACAGCTTTCAGAAG-1 151507_AAACAGCTTTCAG..          3          1          1
+...                                   ...        ...        ...        ...
+TTGTTGTGTGTCAAGA-1 151676_TTGTTGTGTGTCA..          1          1          1
+TTGTTTCACATCCAGG-1 151676_TTGTTTCACATCC..          6          2          3
+TTGTTTCATTAGTCTA-1 151676_TTGTTTCATTAGT..          9          2          3
+TTGTTTCCATACAACT-1 151676_TTGTTTCCATACA..          2          1          1
+TTGTTTGTGTAAATTC-1 151676_TTGTTTGTGTAAA..          0          1          1
+                   SNN_k50_k6 SNN_k50_k7 SNN_k50_k8 SNN_k50_k9 SNN_k50_k10
+                    &lt;integer&gt;  &lt;integer&gt;  &lt;integer&gt;  &lt;integer&gt;   &lt;integer&gt;
+AAACAACGAATAGTTC-1          1          3          3          4           4
+AAACAAGTATCTCCCA-1          1          1          1          1           1
+AAACAATCTACTAGCA-1          3          4          4          5           5
+AAACACCAATAACTGC-1          4          5          8          9          10
+AAACAGCTTTCAGAAG-1          1          1          1          3           3
+...                       ...        ...        ...        ...         ...
+TTGTTGTGTGTCAAGA-1          1          1          1          1           1
+TTGTTTCACATCCAGG-1          4          5          6          7           8
+TTGTTTCATTAGTCTA-1          4          5          6          7           8
+TTGTTTCCATACAACT-1          1          1          1          3           3
+TTGTTTGTGTAAATTC-1          2          2          2          2           2
+                   SNN_k50_k11 SNN_k50_k12 SNN_k50_k13 SNN_k50_k14 SNN_k50_k15
+                     &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;
+AAACAACGAATAGTTC-1           5           5           5           6           7
+AAACAAGTATCTCCCA-1           4           4           4           4           3
+AAACAATCTACTAGCA-1           6           6           6           7           8
+AAACACCAATAACTGC-1          11          10           9          10          11
+AAACAGCTTTCAGAAG-1           3           3           3           3           2
+...                        ...         ...         ...         ...         ...
+TTGTTGTGTGTCAAGA-1           4           4           4           4           3
+TTGTTTCACATCCAGG-1           9           8           8           9          10
+TTGTTTCATTAGTCTA-1           9           8           8           9          10
+TTGTTTCCATACAACT-1           3           3           3           3           2
+TTGTTTGTGTAAATTC-1           1           1           1           1           5
+                   SNN_k50_k16 SNN_k50_k17 SNN_k50_k18 SNN_k50_k19 SNN_k50_k20
+                     &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;
+AAACAACGAATAGTTC-1           7           9          10          10          10
+AAACAAGTATCTCCCA-1           3           3           2           2           2
+AAACAATCTACTAGCA-1           8           7           8           8           8
+AAACACCAATAACTGC-1          11          12          13          12          11
+AAACAGCTTTCAGAAG-1           2           2           1           1           1
+...                        ...         ...         ...         ...         ...
+TTGTTGTGTGTCAAGA-1           3           3           2           2           2
+TTGTTTCACATCCAGG-1          10          11          12          18          18
+TTGTTTCATTAGTCTA-1          10          11          12          15          15
+TTGTTTCCATACAACT-1           2           2           1           1           1
+TTGTTTGTGTAAATTC-1           5           5           5           5           5
+                   SNN_k50_k21 SNN_k50_k22 SNN_k50_k23 SNN_k50_k24 SNN_k50_k25
+                     &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;
+AAACAACGAATAGTTC-1          10          11          11          11          12
+AAACAAGTATCTCCCA-1           2           1           1           1           6
+AAACAATCTACTAGCA-1           8           9           9           9           9
+AAACACCAATAACTGC-1          11          12          20          20          21
+AAACAGCTTTCAGAAG-1           1           6           6           6           5
+...                        ...         ...         ...         ...         ...
+TTGTTGTGTGTCAAGA-1           2           1           1           1          10
+TTGTTTCACATCCAGG-1          17          18          17          17          18
+TTGTTTCATTAGTCTA-1          14          15          14          13          14
+TTGTTTCCATACAACT-1           1           6           6           6           5
+TTGTTTGTGTAAATTC-1           5           4           4           4           3
+                   SNN_k50_k26 SNN_k50_k27 SNN_k50_k28 GraphBased  Maynard
+                     &lt;integer&gt;   &lt;integer&gt;   &lt;integer&gt;  &lt;integer&gt; &lt;factor&gt;
+AAACAACGAATAGTTC-1          13          13          14          6       WM
+AAACAAGTATCTCCCA-1           5           5           4          3       6 
+AAACAATCTACTAGCA-1           9           9           9          2       1 
+AAACACCAATAACTGC-1          22          21          22          5       5 
+AAACAGCTTTCAGAAG-1           4           4           3          1       4 
+...                        ...         ...         ...        ...      ...
+TTGTTGTGTGTCAAGA-1          10          10          10          5       5 
+TTGTTTCACATCCAGG-1          19          18          19          2       WM
+TTGTTTCATTAGTCTA-1          15          15          16          2       WM
+TTGTTTCCATACAACT-1           4           4           3          7       6 
+TTGTTTGTGTAAATTC-1           3           3           2          1       1 
+                   Martinowich layer_guess layer_guess_reordered
+                      &lt;factor&gt;    &lt;factor&gt;              &lt;factor&gt;
+AAACAACGAATAGTTC-1          WM      Layer1                Layer1
+AAACAAGTATCTCCCA-1          6       Layer3                Layer3
+AAACAATCTACTAGCA-1          1       Layer1                Layer1
+AAACACCAATAACTGC-1          5       WM                    WM    
+AAACAGCTTTCAGAAG-1          4       Layer6                Layer6
+...                        ...         ...                   ...
+TTGTTGTGTGTCAAGA-1          4       Layer6                Layer6
+TTGTTTCACATCCAGG-1          WM      WM                    WM    
+TTGTTTCATTAGTCTA-1          WM      WM                    WM    
+TTGTTTCCATACAACT-1          6       Layer6                Layer6
+TTGTTTGTGTAAATTC-1          1       Layer1                Layer1
+                   layer_guess_reordered_short expr_chrM expr_chrM_ratio
+                                      &lt;factor&gt; &lt;numeric&gt;       &lt;numeric&gt;
+AAACAACGAATAGTTC-1                          L1        88       0.0928270
+AAACAAGTATCTCCCA-1                          L3       657       0.1541892
+AAACAATCTACTAGCA-1                          L1       431       0.2188928
+AAACACCAATAACTGC-1                          WM       272       0.0807601
+AAACAGCTTTCAGAAG-1                          L6       502       0.1683999
+...                                        ...       ...             ...
+TTGTTGTGTGTCAAGA-1                          L6       475        0.164931
+TTGTTTCACATCCAGG-1                          WM       320        0.121212
+TTGTTTCATTAGTCTA-1                          WM       262        0.127000
+TTGTTTCCATACAACT-1                          L6       161        0.156159
+TTGTTTGTGTAAATTC-1                          L1       667        0.254095
+                   SpatialDE_PCA SpatialDE_pool_PCA   HVG_PCA pseudobulk_PCA
+                       &lt;integer&gt;          &lt;integer&gt; &lt;integer&gt;      &lt;integer&gt;
+AAACAACGAATAGTTC-1             4                  5         3              5
+AAACAAGTATCTCCCA-1             2                  3         1              2
+AAACAATCTACTAGCA-1             4                  4         4              4
+AAACACCAATAACTGC-1             6                  7         6              6
+AAACAGCTTTCAGAAG-1             1                  1         3              1
+...                          ...                ...       ...            ...
+TTGTTGTGTGTCAAGA-1             1                  2         2              2
+TTGTTTCACATCCAGG-1             5                  5         4              5
+TTGTTTCATTAGTCTA-1             5                  5         4              4
+TTGTTTCCATACAACT-1             4                  8         6              2
+TTGTTTGTGTAAATTC-1             1                  1         2              7
+                   markers_PCA SpatialDE_UMAP SpatialDE_pool_UMAP  HVG_UMAP
+                     &lt;integer&gt;      &lt;integer&gt;           &lt;integer&gt; &lt;integer&gt;
+AAACAACGAATAGTTC-1           4              1                   2         1
+AAACAAGTATCTCCCA-1           2              1                   3         1
+AAACAATCTACTAGCA-1           8              2                   4         5
+AAACACCAATAACTGC-1           8              5                   7         7
+AAACAGCTTTCAGAAG-1           1              2                   3         6
+...                        ...            ...                 ...       ...
+TTGTTGTGTGTCAAGA-1           1              1                   3         2
+TTGTTTCACATCCAGG-1           6              4                   5         5
+TTGTTTCATTAGTCTA-1           1              4                   5         7
+TTGTTTCCATACAACT-1           3              1                   2         3
+TTGTTTGTGTAAATTC-1           4              2                   1         4
+                   pseudobulk_UMAP markers_UMAP SpatialDE_PCA_spatial
+                         &lt;integer&gt;    &lt;integer&gt;             &lt;integer&gt;
+AAACAACGAATAGTTC-1               3            1                     3
+AAACAAGTATCTCCCA-1               2            1                     4
+AAACAATCTACTAGCA-1               3            6                     3
+AAACACCAATAACTGC-1               7            1                     7
+AAACAGCTTTCAGAAG-1               1            1                     1
+...                            ...          ...                   ...
+TTGTTGTGTGTCAAGA-1               2            3                     1
+TTGTTTCACATCCAGG-1               6            1                     5
+TTGTTTCATTAGTCTA-1               4            2                     5
+TTGTTTCCATACAACT-1               3            1                     4
+TTGTTTGTGTAAATTC-1               2            6                     2
+                   SpatialDE_pool_PCA_spatial HVG_PCA_spatial
+                                    &lt;integer&gt;       &lt;integer&gt;
+AAACAACGAATAGTTC-1                          5               5
+AAACAAGTATCTCCCA-1                          1               2
+AAACAATCTACTAGCA-1                          4               3
+AAACACCAATAACTGC-1                          6               7
+AAACAGCTTTCAGAAG-1                          2               1
+...                                       ...             ...
+TTGTTGTGTGTCAAGA-1                          1               4
+TTGTTTCACATCCAGG-1                          5               5
+TTGTTTCATTAGTCTA-1                          5               5
+TTGTTTCCATACAACT-1                          8               2
+TTGTTTGTGTAAATTC-1                          2               1
+                   pseudobulk_PCA_spatial markers_PCA_spatial
+                                &lt;integer&gt;           &lt;integer&gt;
+AAACAACGAATAGTTC-1                      4                   3
+AAACAAGTATCTCCCA-1                      3                   1
+AAACAATCTACTAGCA-1                      5                   7
+AAACACCAATAACTGC-1                      7                   7
+AAACAGCTTTCAGAAG-1                      1                   2
+...                                   ...                 ...
+TTGTTGTGTGTCAAGA-1                      2                   6
+TTGTTTCACATCCAGG-1                      4                   4
+TTGTTTCATTAGTCTA-1                      4                   2
+TTGTTTCCATACAACT-1                      2                   4
+TTGTTTGTGTAAATTC-1                      3                   2
+                   SpatialDE_UMAP_spatial SpatialDE_pool_UMAP_spatial
+                                &lt;integer&gt;                   &lt;integer&gt;
+AAACAACGAATAGTTC-1                      1                           1
+AAACAAGTATCTCCCA-1                      2                           2
+AAACAATCTACTAGCA-1                      2                           1
+AAACACCAATAACTGC-1                      7                           8
+AAACAGCTTTCAGAAG-1                      8                           2
+...                                   ...                         ...
+TTGTTGTGTGTCAAGA-1                      6                           1
+TTGTTTCACATCCAGG-1                      5                           5
+TTGTTTCATTAGTCTA-1                      5                           5
+TTGTTTCCATACAACT-1                      2                           3
+TTGTTTGTGTAAATTC-1                      1                           2
+                   HVG_UMAP_spatial pseudobulk_UMAP_spatial
+                          &lt;integer&gt;               &lt;integer&gt;
+AAACAACGAATAGTTC-1                1                       1
+AAACAAGTATCTCCCA-1                1                       2
+AAACAATCTACTAGCA-1                4                       1
+AAACACCAATAACTGC-1                7                       8
+AAACAGCTTTCAGAAG-1                8                       1
+...                             ...                     ...
+TTGTTGTGTGTCAAGA-1                4                       1
+TTGTTTCACATCCAGG-1                5                       8
+TTGTTTCATTAGTCTA-1                8                       1
+TTGTTTCCATACAACT-1                2                       4
+TTGTTTGTGTAAATTC-1                1                       2
+                   markers_UMAP_spatial spatialLIBD ManualAnnotation in_tissue
+                              &lt;integer&gt;    &lt;factor&gt;      &lt;character&gt; &lt;logical&gt;
+AAACAACGAATAGTTC-1                    1          L1               NA      TRUE
+AAACAAGTATCTCCCA-1                    1          L3               NA      TRUE
+AAACAATCTACTAGCA-1                    6          L1               NA      TRUE
+AAACACCAATAACTGC-1                    1          WM               NA      TRUE
+AAACAGCTTTCAGAAG-1                    1          L6               NA      TRUE
+...                                 ...         ...              ...       ...
+TTGTTGTGTGTCAAGA-1                    1          L6               NA      TRUE
+TTGTTTCACATCCAGG-1                    1          WM               NA      TRUE
+TTGTTTCATTAGTCTA-1                    1          WM               NA      TRUE
+TTGTTTCCATACAACT-1                    7          L6               NA      TRUE
+TTGTTTGTGTAAATTC-1                    5          L1               NA      TRUE
+                   array_row array_col
+                   &lt;integer&gt; &lt;integer&gt;
+AAACAACGAATAGTTC-1         0        16
+AAACAAGTATCTCCCA-1        50       102
+AAACAATCTACTAGCA-1         3        43
+AAACACCAATAACTGC-1        59        19
+AAACAGCTTTCAGAAG-1        43         9
+...                      ...       ...
+TTGTTGTGTGTCAAGA-1        31        77
+TTGTTTCACATCCAGG-1        58        42
+TTGTTTCATTAGTCTA-1        60        30
+TTGTTTCCATACAACT-1        45        27
+TTGTTTGTGTAAATTC-1         7        51</code></pre>
+<pre class="r"><code>table(colData(spe)$sample_id)
+
+151507 151508 151509 151510 151669 151670 151671 151672 151673 151674 151675 
+  4226   4384   4789   4634   3661   3498   4110   4015   3639   3673   3592 
+151676 
+  3460 </code></pre>
+<p>For simplicity, we are going to analyze here only the sample with
+identifier <code>sample_151673</code> to match the analysis shown at
+<a href="http://research.libd.org/spatialLIBD/articles/spatialLIBD.html" class="uri">http://research.libd.org/spatialLIBD/articles/spatialLIBD.html</a></p>
+<pre class="r"><code>spe &lt;- spe[, colData(spe)$sample_id %in% &quot;151673&quot;]
+dim(spe)
+[1] 33538  3639</code></pre>
+<p>There is an indicator column called <code>in_tissue</code> for identifying spots
+overlapping the tissue, but apparently all spots have such a condition.</p>
+<pre class="r"><code>stopifnot(all(colData(spe)$in_tissue))</code></pre>
+<p>The column data includes a column called <code>spatialLIBD</code> with anatomically
+annotated groups of spots (six cortical layers and white matter). This
+annotation is apparently missing for a small number of spots, we are
+going to discard those spots as well.</p>
+<pre class="r"><code>table(colData(spe)$spatialLIBD, useNA=&quot;always&quot;)
+
+  L1   L2   L3   L4   L5   L6   WM &lt;NA&gt; 
+ 273  253  989  218  673  692  513   28 </code></pre>
+<pre class="r"><code>spe &lt;- spe[, !is.na(colData(spe)$spatialLIBD)]
+dim(spe)
+[1] 33538  3611</code></pre>
+<pre class="r"><code>table(colData(spe)$spatialLIBD, useNA=&quot;always&quot;)
+
+  L1   L2   L3   L4   L5   L6   WM &lt;NA&gt; 
+ 273  253  989  218  673  692  513    0 </code></pre>
+<p>This is the internal column metadata.</p>
+<pre class="r"><code>int_colData(spe)
+DataFrame with 3611 rows and 4 columns
+                                                                        reducedDims
+                                                                        &lt;DataFrame&gt;
+1      2.883351: 1.728584:-0.782444:...:  6.10207:  4.78705: 13.22258:  2.62029:...
+2     -0.653350:-0.229478: 0.712581:...:  2.45349:-10.44525: -5.51985: -8.98478:...
+3    -18.570067: 6.744661:-2.324388:...:-22.36197:-12.98727:-34.77388:-10.87694:...
+4      1.705496: 0.195907:-2.507597:...:  2.55240:  8.38520: 16.70223:  6.00764:...
+5      0.199118: 3.394469: 1.790685:...:  0.56047: -8.79597:-12.14624:-17.35129:...
+...                                                                             ...
+3607     -19.21370:8.74150:-3.4149234:...:-23.1179:-13.16084:-37.0157:-10.46238:...
+3608     -17.13515:2.83281:-2.3990686:...:-20.5678:-13.21409:-33.6455:-13.85624:...
+3609      -5.92290:3.71790:-2.6455923:...:-13.4886:-15.63080:-19.7136:-19.82394:...
+3610      -9.63044:3.76098:-0.0814927:...:-16.2281:-13.83575:-24.6045:-14.99459:...
+3611       4.54230:2.45760:-0.9138801:...:  5.6222:  7.08158: 14.3436:  8.06088:...
+         altExps    colPairs spatialCoords
+     &lt;DataFrame&gt; &lt;DataFrame&gt;      &lt;matrix&gt;
+1                                9791:8468
+2                                5769:2807
+3                                4068:9505
+4                                9271:4151
+5                                3393:7583
+...          ...         ...           ...
+3607                            5653: 9396
+3608                            4825: 9630
+3609                            4631: 7831
+3610                            5571:11193
+3611                            6317: 3291</code></pre>
+</div>
+<div id="quality-assessment" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Quality assessment</h1>
+<p>Identify mitochondrial (MT) genes, here the column with the gene HUGO symbols
+is called <code>gene_name</code>.</p>
+<pre class="r"><code>is_mito &lt;- grepl(&quot;(^MT-)|(^mt-)&quot;, rowData(spe)$gene_name)
+table(is_mito)
+is_mito
+FALSE  TRUE 
+33525    13 </code></pre>
+<pre class="r"><code>rowData(spe)$gene_name[is_mito]
+ [1] &quot;MT-ND1&quot;  &quot;MT-ND2&quot;  &quot;MT-CO1&quot;  &quot;MT-CO2&quot;  &quot;MT-ATP8&quot; &quot;MT-ATP6&quot; &quot;MT-CO3&quot; 
+ [8] &quot;MT-ND3&quot;  &quot;MT-ND4L&quot; &quot;MT-ND4&quot;  &quot;MT-ND5&quot;  &quot;MT-ND6&quot;  &quot;MT-CYB&quot; </code></pre>
+<p>Add quality control metrics.</p>
+<pre class="r"><code>library(scuttle)
+library(ggspavis)
+library(patchwork)
+
+spe &lt;- addPerCellQC(spe, subsets=list(mito=is_mito))</code></pre>
+<p>Explore sequencing depth in UMI counts per spot. Figure
+<a href="#fig:hdlpfctissueUMIcntxspot">1</a> shows in the tissue image the spatial
+pattern of sequencing depth in UMI counts per spot.</p>
+<pre class="r"><code>## image seems to be reversed and for this reason we set x_coord=&quot;pxl_col_in_fullres&quot;
+## and y_coord=&quot;pxl_row_in_fullres&quot;
+plotVisium(spe, x_coord=&quot;pxl_col_in_fullres&quot;,
+           y_coord=&quot;pxl_row_in_fullres&quot;,
+           annotate=&quot;sum&quot;, point_size=1,
+           pal=c(&quot;skyblue&quot;, &quot;darkred&quot;), facets=NULL)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:hdlpfctissueUMIcntxspot"></span>
+<img src="03_qa_pr_hdlpfc_files/figure-html/hdlpfctissueUMIcntxspot-1.png" alt="Spatial pattern of sequencing depth per spot in UMI counts." width="600px"  class="widefigure" />
+<p class="caption">
+Figure 1: <span class="caption-title">Spatial pattern of sequencing depth per spot in UMI counts</span><br>
+</p>
+</div>
+<p>Figure <a href="#fig:hdlpfcUMIcntxspot">2</a>a
+shows the frequency distribution of UMI counts per spot and panels (b) to (d)
+show the spatial distribution of discarded spots at different cutoffs of
+sequencing depth (2000, 1000 and 700).</p>
+<pre class="r"><code>hp &lt;- ggplot(data=colData(spe), aes(x=sum)) +
+        geom_histogram(bins=40) +
+        labs(x=&quot;UMI counts per spot&quot;, y=&quot;Frequency&quot;, tag=&quot;a&quot;) +
+        geom_vline(aes(xintercept=2000), col=&quot;darkgreen&quot;) +
+        geom_vline(aes(xintercept=1000), col=&quot;darkorange&quot;) +
+        geom_vline(aes(xintercept=700), col=&quot;darkred&quot;)
+colData(spe)$qc_lib_size &lt;- colData(spe)$sum &lt; 2000
+qp2k &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_lib_size&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;b&quot;)
+colData(spe)$qc_lib_size &lt;- colData(spe)$sum &lt; 1000
+qp1k &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_lib_size&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;c&quot;)
+colData(spe)$qc_lib_size &lt;- colData(spe)$sum &lt; 700
+qp700 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_lib_size&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;d&quot;)
+(hp | qp2k) / (qp1k | qp700)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:hdlpfcUMIcntxspot"></span>
+<img src="03_qa_pr_hdlpfc_files/figure-html/hdlpfcUMIcntxspot-1.png" alt="Sequencing depth per spot in UMI counts. (a) Frequency distribution of UMI counts, where vertical lines indicate possible cutoff UMI count values below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 2: <span class="caption-title">Sequencing depth per spot in UMI counts</span><br>(a) Frequency distribution of UMI counts, where vertical lines indicate possible cutoff UMI count values below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values.
+</p>
+</div>
+<p>Explore number of genes with non-zero UMI counts per spot. Figure
+<a href="#fig:hdlpfcnonzeroUMIcntxspot">3</a>a shows the frequency distribution of genes
+per spot with non-zero UMI counts, while panels (b) do (d)
+show the spatial distribution of discarded spots at different cutoffs of
+sequencing depth (1000, 750 and 500).</p>
+<pre class="r"><code>hp &lt;- ggplot(data=colData(spe), aes(x=detected)) +
+        geom_histogram(bins=40) +
+        labs(x=&quot;Genes with non-zero UMI counts per spot&quot;,
+             y=&quot;Frequency&quot;, tag=&quot;a&quot;) +
+        geom_vline(aes(xintercept=1000), col=&quot;darkgreen&quot;) +
+        geom_vline(aes(xintercept=750), col=&quot;darkorange&quot;) +
+        geom_vline(aes(xintercept=500), col=&quot;darkred&quot;)
+colData(spe)$qc_detected &lt;- colData(spe)$detected &lt; 1000
+qp1k &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_detected&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;b&quot;)
+colData(spe)$qc_detected &lt;- colData(spe)$detected &lt; 750
+qp750 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_detected&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;c&quot;)
+colData(spe)$qc_detected &lt;- colData(spe)$detected &lt; 500
+qp500 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_detected&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;d&quot;)
+(hp | qp1k) / (qp750 | qp500)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:hdlpfcnonzeroUMIcntxspot"></span>
+<img src="03_qa_pr_hdlpfc_files/figure-html/hdlpfcnonzeroUMIcntxspot-1.png" alt="Non-zero UMI counts per spot. (a) Frequency distribution of non-zero UMI counts per spot, where vertical lines indicate possible cutoff values in the number of genes with non-zero UMI counts, below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 3: <span class="caption-title">Non-zero UMI counts per spot</span><br>(a) Frequency distribution of non-zero UMI counts per spot, where vertical lines indicate possible cutoff values in the number of genes with non-zero UMI counts, below which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values.
+</p>
+</div>
+<p>Figure <a href="#fig:hdlpfcMTUMIcntxspot">4</a> shows the proportion of MT UMI counts per
+spot.</p>
+<pre class="r"><code>hp &lt;- ggplot(data=colData(spe), aes(x=subsets_mito_percent)) +
+        geom_histogram(bins=40) +
+        labs(x=&quot;Proportion of mitochondrial UMI counts per spot&quot;,
+             y=&quot;Frequency&quot;, tag=&quot;a&quot;) +
+        geom_vline(aes(xintercept=25), col=&quot;darkgreen&quot;) +
+        geom_vline(aes(xintercept=27), col=&quot;darkorange&quot;) +
+        geom_vline(aes(xintercept=29), col=&quot;darkred&quot;)
+colData(spe)$qc_mito &lt;- colData(spe)$subsets_mito_percent &gt; 25
+qp25 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_mito&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;b&quot;)
+colData(spe)$qc_mito &lt;- colData(spe)$subsets_mito_percent &gt; 27
+qp27 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_mito&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;c&quot;)
+colData(spe)$qc_mito &lt;- colData(spe)$subsets_mito_percent &gt; 29
+qp29 &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;qc_mito&quot;) +
+          theme(legend.position=&quot;none&quot;) + labs(tag=&quot;d&quot;)
+(hp | qp25) / (qp27 | qp29)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:hdlpfcMTUMIcntxspot"></span>
+<img src="03_qa_pr_hdlpfc_files/figure-html/hdlpfcMTUMIcntxspot-1.png" alt="Mitochondrial UMI counts per spot. (a) Frequency distribution of the proportion of mitochondrial UMI counts per spot, where vertical lines indicate possible cutoff values in the proportion of UMI counts from mitochondrial genes, above which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 4: <span class="caption-title">Mitochondrial UMI counts per spot</span><br>(a) Frequency distribution of the proportion of mitochondrial UMI counts per spot, where vertical lines indicate possible cutoff values in the proportion of UMI counts from mitochondrial genes, above which spots would be discarded. (b) to (d) spatial distribution of spots discarded using the ppreviously considered sequencing depth cutoff values.
+</p>
+</div>
+<p>We use the more lenient cutoff values in the previous three
+QC metrics, which lead to the following amount of discarded
+spots per metric.</p>
+<pre class="r"><code>colData(spe)$discard &lt;- colData(spe)$qc_lib_size |
+                        colData(spe)$qc_detected |
+                        colData(spe)$qc_mito
+table(colData(spe)$discard)
+
+FALSE  TRUE 
+ 3591    20 </code></pre>
+<p>Figure <a href="#fig:hdlpfcdiscardedspots">5</a> below shows the spatial pattern of the
+discarded spots.</p>
+<pre class="r"><code>pqc &lt;- plotSpotQC(spe, plot_type=&quot;spot&quot;, annotate=&quot;discard&quot;) +
+         theme(legend.position=&quot;none&quot;) + labs(tag=&quot;a&quot;)
+## image seems to be reversed and for this reason we set x_coord=&quot;pxl_col_in_fullres&quot;
+## and y_coord=&quot;pxl_row_in_fullres&quot;
+pts &lt;- plotVisium(spe, x_coord=&quot;pxl_col_in_fullres&quot;, facets=NULL,
+                  y_coord=&quot;pxl_row_in_fullres&quot;, annotate=&quot;discard&quot;) +
+         labs(tag=&quot;b&quot;) + theme(legend.position=&quot;none&quot;)
+(pqc | pts)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:hdlpfcdiscardedspots"></span>
+<img src="03_qa_pr_hdlpfc_files/figure-html/hdlpfcdiscardedspots-1.png" alt="Spatial pattern of discarded spots. (a) Discarded spots highlighted in red in the spot grid. (b) Discarded spots highlighted in blue in the tissue plot." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 5: <span class="caption-title">Spatial pattern of discarded spots</span><br>(a) Discarded spots highlighted in red in the spot grid. (b) Discarded spots highlighted in blue in the tissue plot.
+</p>
+</div>
+<p>Finally, we filter out these low-quality spots.</p>
+<pre class="r"><code>dim(spe)
+[1] 33538  3611</code></pre>
+<pre class="r"><code>spe &lt;- spe[, !colData(spe)$discard]
+dim(spe)
+[1] 33538  3591</code></pre>
+</div>
+<div id="filter-lowly-expressed-genes" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Filter lowly-expressed genes</h1>
+<p>Figure <a href="#fig:hdlpfcUMIcntxgene">6</a> shows the empirical distribution of UMI
+counts per gene.</p>
+<pre class="r"><code>cntxgene &lt;- rowSums(assays(spe)$counts)+1
+plot.ecdf(cntxgene, xaxt=&quot;n&quot;, panel.first=grid(), xlab=&quot;UMI counts per gene&quot;,
+          las=1, log=&quot;x&quot;, xlim=c(1, 10e5), main=&quot;&quot;)
+axis(1, at=10^(0:5), labels=10^(0:5))
+abline(v=100, lwd=2, col=&quot;red&quot;)</code></pre>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:hdlpfcUMIcntxgene"></span>
+<img src="03_qa_pr_hdlpfc_files/figure-html/hdlpfcUMIcntxgene-1.png" alt="UMI counts per gene. The vertical red line shows a cutoff value below which we discard lowly-expressed genes." width="500px"  class="widefigure" />
+<p class="caption">
+Figure 6: <span class="caption-title">UMI counts per gene</span><br>The vertical red line shows a cutoff value below which we discard lowly-expressed genes.
+</p>
+</div>
+<p>We filter out genes with less than 100 counts throughout all spots.</p>
+<pre class="r"><code>dim(spe)
+[1] 33538  3591</code></pre>
+<pre class="r"><code>spe.filt &lt;- spe[cntxgene &gt; 100, ]
+dim(spe.filt)
+[1] 11364  3591</code></pre>
+</div>
+<div id="normalization" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Normalization</h1>
+<p>Calculate normalization factors and normalized expression values in logarithmic
+scale.</p>
+<pre class="r"><code>spe.filt &lt;- computeLibraryFactors(spe.filt)
+summary(sizeFactors(spe.filt))
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1512  0.6292  0.8980  1.0000  1.2884  3.7766 </code></pre>
+<pre class="r"><code>spe.filt &lt;- logNormCounts(spe.filt)
+assayNames(spe.filt)
+[1] &quot;counts&quot;    &quot;logcounts&quot;</code></pre>
+<pre class="r"><code>assays(spe.filt)$logcounts[1:5, 1:4]
+5 x 4 sparse Matrix of class &quot;dgCMatrix&quot;
+                AAACAAGTATCTCCCA-1 AAACAATCTACTAGCA-1 AAACACCAATAACTGC-1
+ENSG00000188976          .                   .                   1.15724
+ENSG00000187961          .                   .                   .      
+ENSG00000188290          0.6292269           .                   .      
+ENSG00000187608          .                   .                   .      
+ENSG00000188157          0.6292269           2.722102            .      
+                AAACAGAGCGACTCCT-1
+ENSG00000188976                  .
+ENSG00000187961                  .
+ENSG00000188290                  .
+ENSG00000187608                  .
+ENSG00000188157                  .</code></pre>
+<p>Finally, store the quality controlled, normalized and processed data.</p>
+<pre class="r"><code>saveRDS(spe.filt, file=file.path(&quot;_processed_data&quot;,
+                                 &quot;spe.filt.human_dlpfc.rds&quot;))</code></pre>
+</div>
+<div id="gene-sets-preparation" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Gene Sets preparation</h1>
+<pre class="r"><code>library(openxlsx)
+library(dplyr)
+
+cellmarkers &lt;- read.xlsx(file.path(&quot;_annotation_data&quot;, &quot;Cell_marker_Human.xlsx&quot;),
+                         rowNames=FALSE)
+dim(cellmarkers)
+[1] 60877    20</code></pre>
+<pre class="r"><code>head(cellmarkers, 3)
+  species tissue_class tissue_type uberonongology_id cancer_type   cell_type
+1   Human      Abdomen     Abdomen    UBERON_0000916      Normal Normal cell
+2   Human      Abdomen     Abdomen    UBERON_0000916      Normal Normal cell
+3   Human      Abdomen     Abdomen    UBERON_0000916      Normal Normal cell
+   cell_name cellontology_id marker Symbol GeneID       Genetype
+1 Macrophage      CL_0000235  MERTK  MERTK  10461 protein_coding
+2 Macrophage      CL_0000235   CD16 FCGR3A   2215 protein_coding
+3 Macrophage      CL_0000235  CD206   MRC1   4360 protein_coding
+                             Genename UNIPROTID technology_seq marker_source
+1 MER proto-oncogene, tyrosine kinase    Q12866           None    Experiment
+2    Fc fragment of IgG receptor IIIb    O75015           None    Experiment
+3           mannose receptor C-type 1    P22897           None    Experiment
+      PMID
+1 31982413
+2 31982413
+3 31982413
+                                                                                                                                                                        Title
+1 Peritoneal Level of CD206 Associates With Mortality and an Inflammatory Macrophage Phenotype in Patients With Decompensated Cirrhosis and Spontaneous Bacterial Peritonitis
+2 Peritoneal Level of CD206 Associates With Mortality and an Inflammatory Macrophage Phenotype in Patients With Decompensated Cirrhosis and Spontaneous Bacterial Peritonitis
+3 Peritoneal Level of CD206 Associates With Mortality and an Inflammatory Macrophage Phenotype in Patients With Decompensated Cirrhosis and Spontaneous Bacterial Peritonitis
+           journal year
+1 Gastroenterology 2020
+2 Gastroenterology 2020
+3 Gastroenterology 2020</code></pre>
+<pre class="r"><code>mask &lt;- !is.na(cellmarkers$Symbol) &amp; !is.na(cellmarkers$GeneID)
+sum(mask)
+[1] 53978</code></pre>
+<pre class="r"><code>cellmarkers &lt;- cellmarkers[mask, ]
+dim(cellmarkers)
+[1] 53978    20</code></pre>
+<pre class="r"><code>mask &lt;- cellmarkers$tissue_class == &quot;Brain&quot; &amp;
+        cellmarkers$cell_type == &quot;Normal cell&quot;
+mask[is.na(mask)] &lt;- FALSE
+sum(mask)
+[1] 2752</code></pre>
+<pre class="r"><code>braincellmarkers &lt;- cellmarkers[mask, ]
+head(sort(table(braincellmarkers$cell_name), decreasing=TRUE))
+
+  Microglial cell         Astrocyte   Oligodendrocyte            Neuron 
+              493               380               277               249 
+       Macrophage Inhibitory neuron 
+               99                61 </code></pre>
+<pre class="r"><code>cell_types &lt;- split(braincellmarkers$Symbol, braincellmarkers$cell_name)
+length(cell_types)
+[1] 193</code></pre>
+<p>Map gene identifiers to those in the <code>SpatialExperiment</code> object.</p>
+<pre class="r"><code>cell_types &lt;- lapply(cell_types,
+                     function(x, speids, spesyms)
+                       speids[spesyms %in% x],
+                     rownames(spe.filt), rowData(spe.filt)$gene_name)
+cell_types &lt;- cell_types[lengths(cell_types) &gt; 1]
+length(cell_types)
+[1] 95</code></pre>
+<pre class="r"><code>names(cell_types) &lt;- make.names(names(cell_types))
+head(cell_types)
+$Activated.B.cell
+[1] &quot;ENSG00000019582&quot; &quot;ENSG00000211899&quot;
+
+$Astrocyte
+  [1] &quot;ENSG00000117318&quot; &quot;ENSG00000177606&quot; &quot;ENSG00000162599&quot; &quot;ENSG00000117525&quot;
+  [5] &quot;ENSG00000160781&quot; &quot;ENSG00000177807&quot; &quot;ENSG00000018625&quot; &quot;ENSG00000143318&quot;
+  [9] &quot;ENSG00000162734&quot; &quot;ENSG00000135821&quot; &quot;ENSG00000133048&quot; &quot;ENSG00000159388&quot;
+ [13] &quot;ENSG00000135744&quot; &quot;ENSG00000143878&quot; &quot;ENSG00000152518&quot; &quot;ENSG00000116016&quot;
+ [17] &quot;ENSG00000179915&quot; &quot;ENSG00000115380&quot; &quot;ENSG00000065911&quot; &quot;ENSG00000144057&quot;
+ [21] &quot;ENSG00000150551&quot; &quot;ENSG00000150540&quot; &quot;ENSG00000115963&quot; &quot;ENSG00000071967&quot;
+ [25] &quot;ENSG00000091409&quot; &quot;ENSG00000079308&quot; &quot;ENSG00000171951&quot; &quot;ENSG00000179796&quot;
+ [29] &quot;ENSG00000172037&quot; &quot;ENSG00000168309&quot; &quot;ENSG00000144749&quot; &quot;ENSG00000175161&quot;
+ [33] &quot;ENSG00000163406&quot; &quot;ENSG00000144908&quot; &quot;ENSG00000169860&quot; &quot;ENSG00000114790&quot;
+ [37] &quot;ENSG00000181449&quot; &quot;ENSG00000058866&quot; &quot;ENSG00000068078&quot; &quot;ENSG00000184985&quot;
+ [41] &quot;ENSG00000163288&quot; &quot;ENSG00000134853&quot; &quot;ENSG00000171476&quot; &quot;ENSG00000163453&quot;
+ [45] &quot;ENSG00000080493&quot; &quot;ENSG00000152583&quot; &quot;ENSG00000138696&quot; &quot;ENSG00000109472&quot;
+ [49] &quot;ENSG00000079215&quot; &quot;ENSG00000081189&quot; &quot;ENSG00000145721&quot; &quot;ENSG00000134982&quot;
+ [53] &quot;ENSG00000092421&quot; &quot;ENSG00000155324&quot; &quot;ENSG00000164398&quot; &quot;ENSG00000152377&quot;
+ [57] &quot;ENSG00000155511&quot; &quot;ENSG00000172201&quot; &quot;ENSG00000204592&quot; &quot;ENSG00000124772&quot;
+ [61] &quot;ENSG00000178233&quot; &quot;ENSG00000111799&quot; &quot;ENSG00000152661&quot; &quot;ENSG00000135540&quot;
+ [65] &quot;ENSG00000092820&quot; &quot;ENSG00000255690&quot; &quot;ENSG00000078549&quot; &quot;ENSG00000122547&quot;
+ [69] &quot;ENSG00000011426&quot; &quot;ENSG00000106211&quot; &quot;ENSG00000105854&quot; &quot;ENSG00000166925&quot;
+ [73] &quot;ENSG00000105894&quot; &quot;ENSG00000101938&quot; &quot;ENSG00000198910&quot; &quot;ENSG00000175445&quot;
+ [77] &quot;ENSG00000120885&quot; &quot;ENSG00000164683&quot; &quot;ENSG00000137070&quot; &quot;ENSG00000107372&quot;
+ [81] &quot;ENSG00000165092&quot; &quot;ENSG00000148053&quot; &quot;ENSG00000165029&quot; &quot;ENSG00000041982&quot;
+ [85] &quot;ENSG00000136802&quot; &quot;ENSG00000107317&quot; &quot;ENSG00000050165&quot; &quot;ENSG00000262655&quot;
+ [89] &quot;ENSG00000129151&quot; &quot;ENSG00000026508&quot; &quot;ENSG00000110436&quot; &quot;ENSG00000167996&quot;
+ [93] &quot;ENSG00000109846&quot; &quot;ENSG00000137642&quot; &quot;ENSG00000165478&quot; &quot;ENSG00000221932&quot;
+ [97] &quot;ENSG00000170525&quot; &quot;ENSG00000026025&quot; &quot;ENSG00000148482&quot; &quot;ENSG00000099250&quot;
+[101] &quot;ENSG00000107551&quot; &quot;ENSG00000165730&quot; &quot;ENSG00000197746&quot; &quot;ENSG00000119938&quot;
+[105] &quot;ENSG00000120049&quot; &quot;ENSG00000139116&quot; &quot;ENSG00000185432&quot; &quot;ENSG00000135424&quot;
+[109] &quot;ENSG00000123384&quot; &quot;ENSG00000111783&quot; &quot;ENSG00000186815&quot; &quot;ENSG00000152137&quot;
+[113] &quot;ENSG00000121742&quot; &quot;ENSG00000183722&quot; &quot;ENSG00000136160&quot; &quot;ENSG00000179399&quot;
+[117] &quot;ENSG00000165795&quot; &quot;ENSG00000129521&quot; &quot;ENSG00000100906&quot; &quot;ENSG00000100644&quot;
+[121] &quot;ENSG00000185650&quot; &quot;ENSG00000170345&quot; &quot;ENSG00000211448&quot; &quot;ENSG00000080824&quot;
+[125] &quot;ENSG00000198838&quot; &quot;ENSG00000104112&quot; &quot;ENSG00000074410&quot; &quot;ENSG00000103740&quot;
+[129] &quot;ENSG00000182175&quot; &quot;ENSG00000103152&quot; &quot;ENSG00000153446&quot; &quot;ENSG00000174628&quot;
+[133] &quot;ENSG00000167371&quot; &quot;ENSG00000087250&quot; &quot;ENSG00000125148&quot; &quot;ENSG00000198417&quot;
+[137] &quot;ENSG00000187193&quot; &quot;ENSG00000129244&quot; &quot;ENSG00000179094&quot; &quot;ENSG00000109107&quot;
+[141] &quot;ENSG00000131095&quot; &quot;ENSG00000125398&quot; &quot;ENSG00000133195&quot; &quot;ENSG00000180616&quot;
+[145] &quot;ENSG00000179604&quot; &quot;ENSG00000132470&quot; &quot;ENSG00000171885&quot; &quot;ENSG00000134769&quot;
+[149] &quot;ENSG00000141469&quot; &quot;ENSG00000197971&quot; &quot;ENSG00000101439&quot; &quot;ENSG00000125968&quot;
+[153] &quot;ENSG00000204103&quot; &quot;ENSG00000100979&quot; &quot;ENSG00000101134&quot; &quot;ENSG00000099860&quot;
+[157] &quot;ENSG00000171223&quot; &quot;ENSG00000105612&quot; &quot;ENSG00000160888&quot; &quot;ENSG00000132002&quot;
+[161] &quot;ENSG00000130522&quot; &quot;ENSG00000221946&quot; &quot;ENSG00000128016&quot; &quot;ENSG00000130203&quot;
+[165] &quot;ENSG00000125740&quot; &quot;ENSG00000182902&quot; &quot;ENSG00000100276&quot; &quot;ENSG00000099992&quot;
+[169] &quot;ENSG00000099995&quot; &quot;ENSG00000241878&quot; &quot;ENSG00000100234&quot; &quot;ENSG00000183864&quot;
+[173] &quot;ENSG00000100300&quot; &quot;ENSG00000100427&quot; &quot;ENSG00000205927&quot; &quot;ENSG00000184221&quot;
+[177] &quot;ENSG00000160307&quot;
+
+$Brain.cell
+[1] &quot;ENSG00000099250&quot; &quot;ENSG00000043355&quot; &quot;ENSG00000176165&quot;
+
+$Caudal.ganglionic.eminence.cell
+[1] &quot;ENSG00000175745&quot; &quot;ENSG00000185551&quot;
+
+$CD4..T.cell
+ [1] &quot;ENSG00000116641&quot; &quot;ENSG00000173402&quot; &quot;ENSG00000113552&quot; &quot;ENSG00000164597&quot;
+ [5] &quot;ENSG00000105879&quot; &quot;ENSG00000091140&quot; &quot;ENSG00000108094&quot; &quot;ENSG00000010610&quot;
+ [9] &quot;ENSG00000102531&quot; &quot;ENSG00000153879&quot; &quot;ENSG00000100325&quot; &quot;ENSG00000100412&quot;
+
+$Central.nervous.system.stem.cell
+[1] &quot;ENSG00000174059&quot; &quot;ENSG00000272398&quot;</code></pre>
+<p>It is included in spatialLIBD (Pardo, Spangler, Weber et al., 2022) a set of genes from the Simons Foundation Autism Research Initiative SFARI.Below, we read in the data and create a list() object with the Ensembl gene IDs that SFARI has provided that are related to autism.</p>
+<pre class="r"><code>## Read in the SFARI gene sets included in the package
+asd_sfari &lt;- utils::read.csv(
+    system.file(
+        &quot;extdata&quot;,
+        &quot;SFARI-Gene_genes_01-03-2020release_02-04-2020export.csv&quot;,
+        package = &quot;spatialLIBD&quot;
+    ),
+    as.is = TRUE
+)
+
+## Format them appropriately
+asd_sfari_geneList &lt;- list(
+    Gene_SFARI_all = asd_sfari$ensembl.id,
+    Gene_SFARI_high = asd_sfari$ensembl.id[asd_sfari$gene.score &lt; 3],
+    Gene_SFARI_syndromic = asd_sfari$ensembl.id[asd_sfari$syndromic == 1]
+)
+asd_sfari_geneList
+$Gene_SFARI_all
+  [1] &quot;ENSG00000183044&quot; &quot;ENSG00000154263&quot; &quot;ENSG00000179869&quot; &quot;ENSG00000064687&quot;
+  [5] &quot;ENSG00000159640&quot; &quot;ENSG00000087085&quot; &quot;ENSG00000075624&quot; &quot;ENSG00000077080&quot;
+  [9] &quot;ENSG00000130402&quot; &quot;ENSG00000243989&quot; &quot;ENSG00000196839&quot; &quot;ENSG00000138031&quot;
+ [13] &quot;ENSG00000173175&quot; &quot;ENSG00000156110&quot; &quot;ENSG00000101126&quot; &quot;ENSG00000282608&quot;
+ [17] &quot;ENSG00000239900&quot; &quot;ENSG00000155966&quot; &quot;ENSG00000157985&quot; &quot;ENSG00000135439&quot;
+ [21] &quot;ENSG00000186094&quot; &quot;ENSG00000187546&quot; &quot;ENSG00000092847&quot; &quot;ENSG00000126070&quot;
+ [25] &quot;ENSG00000134698&quot; &quot;ENSG00000180772&quot; &quot;ENSG00000126705&quot; &quot;ENSG00000135541&quot;
+ [29] &quot;ENSG00000127914&quot; &quot;ENSG00000184254&quot; &quot;ENSG00000035687&quot; &quot;ENSG00000112294&quot;
+ [33] &quot;ENSG00000116748&quot; &quot;ENSG00000145020&quot; &quot;ENSG00000145362&quot; &quot;ENSG00000151150&quot;
+ [37] &quot;ENSG00000167522&quot; &quot;ENSG00000185046&quot; &quot;ENSG00000135046&quot; &quot;ENSG00000182287&quot;
+ [41] &quot;ENSG00000034053&quot; &quot;ENSG00000166313&quot; &quot;ENSG00000117362&quot; &quot;ENSG00000285077&quot;
+ [45] &quot;ENSG00000134909&quot; &quot;ENSG00000100852&quot; &quot;ENSG00000104728&quot; &quot;ENSG00000131089&quot;
+ [49] &quot;ENSG00000049618&quot; &quot;ENSG00000189079&quot; &quot;ENSG00000172379&quot; &quot;ENSG00000004848&quot;
+ [53] &quot;ENSG00000128271&quot; &quot;ENSG00000169252&quot; &quot;ENSG00000088035&quot; &quot;ENSG00000169083&quot;
+ [57] &quot;ENSG00000151693&quot; &quot;ENSG00000239388&quot; &quot;ENSG00000116539&quot; &quot;ENSG00000196433&quot;
+ [61] &quot;ENSG00000066279&quot; &quot;ENSG00000148219&quot; &quot;ENSG00000141431&quot; &quot;ENSG00000206190&quot;
+ [65] &quot;ENSG00000163399&quot; &quot;ENSG00000105409&quot; &quot;ENSG00000157087&quot; &quot;ENSG00000185344&quot;
+ [69] &quot;ENSG00000085224&quot; &quot;ENSG00000158321&quot; &quot;ENSG00000166148&quot; &quot;ENSG00000198049&quot;
+ [73] &quot;ENSG00000160862&quot; &quot;ENSG00000123636&quot; &quot;ENSG00000140463&quot; &quot;ENSG00000064787&quot;
+ [77] &quot;ENSG00000103507&quot; &quot;ENSG00000119866&quot; &quot;ENSG00000085185&quot; &quot;ENSG00000115760&quot;
+ [81] &quot;ENSG00000157764&quot; &quot;ENSG00000139618&quot; &quot;ENSG00000135127&quot; &quot;ENSG00000141867&quot;
+ [85] &quot;ENSG00000174672&quot; &quot;ENSG00000109743&quot; &quot;ENSG00000095564&quot; &quot;ENSG00000166167&quot;
+ [89] &quot;ENSG00000111678&quot; &quot;ENSG00000188277&quot; &quot;ENSG00000203710&quot; &quot;ENSG00000131686&quot;
+ [93] &quot;ENSG00000141837&quot; &quot;ENSG00000148408&quot; &quot;ENSG00000151067&quot; &quot;ENSG00000157388&quot;
+ [97] &quot;ENSG00000198216&quot; &quot;ENSG00000102001&quot; &quot;ENSG00000006283&quot; &quot;ENSG00000196557&quot;
+[101] &quot;ENSG00000100346&quot; &quot;ENSG00000153956&quot; &quot;ENSG00000157445&quot; &quot;ENSG00000165995&quot;
+[105] &quot;ENSG00000182985&quot; &quot;ENSG00000163618&quot; &quot;ENSG00000081803&quot; &quot;ENSG00000070808&quot;
+[109] &quot;ENSG00000058404&quot; &quot;ENSG00000182472&quot; &quot;ENSG00000135387&quot; &quot;ENSG00000198286&quot;
+[113] &quot;ENSG00000166734&quot; &quot;ENSG00000147044&quot; &quot;ENSG00000130940&quot; &quot;ENSG00000132024&quot;
+[117] &quot;ENSG00000015133&quot; &quot;ENSG00000123106&quot; &quot;ENSG00000185972&quot; &quot;ENSG00000113328&quot;
+[121] &quot;ENSG00000090061&quot; &quot;ENSG00000184305&quot; &quot;ENSG00000115484&quot; &quot;ENSG00000103855&quot;
+[125] &quot;ENSG00000004468&quot; &quot;ENSG00000198752&quot; &quot;ENSG00000040731&quot; &quot;ENSG00000140937&quot;
+[129] &quot;ENSG00000140945&quot; &quot;ENSG00000150394&quot; &quot;ENSG00000113100&quot; &quot;ENSG00000065883&quot;
+[133] &quot;ENSG00000132964&quot; &quot;ENSG00000008086&quot; &quot;ENSG00000099954&quot; &quot;ENSG00000101489&quot;
+[137] &quot;ENSG00000140488&quot; &quot;ENSG00000174799&quot; &quot;ENSG00000198707&quot; &quot;ENSG00000106477&quot;
+[141] &quot;ENSG00000128849&quot; &quot;ENSG00000198824&quot; &quot;ENSG00000153922&quot; &quot;ENSG00000173575&quot;
+[145] &quot;ENSG00000170004&quot; &quot;ENSG00000171316&quot; &quot;ENSG00000100888&quot; &quot;ENSG00000100288&quot;
+[149] &quot;ENSG00000131165&quot; &quot;ENSG00000133019&quot; &quot;ENSG00000166664&quot; &quot;ENSG00000147432&quot;
+[153] &quot;ENSG00000136425&quot; &quot;ENSG00000079432&quot; &quot;ENSG00000074054&quot; &quot;ENSG00000182372&quot;
+[157] &quot;ENSG00000070371&quot; &quot;ENSG00000153815&quot; &quot;ENSG00000134326&quot; &quot;ENSG00000170289&quot;
+[161] &quot;ENSG00000149970&quot; &quot;ENSG00000088038&quot; &quot;ENSG00000118432&quot; &quot;ENSG00000113805&quot;
+[165] &quot;ENSG00000144619&quot; &quot;ENSG00000149972&quot; &quot;ENSG00000134115&quot; &quot;ENSG00000174469&quot;
+[169] &quot;ENSG00000106714&quot; &quot;ENSG00000152910&quot; &quot;ENSG00000155052&quot; &quot;ENSG00000215018&quot;
+[173] &quot;ENSG00000157184&quot; &quot;ENSG00000109625&quot; &quot;ENSG00000005339&quot; &quot;ENSG00000009307&quot;
+[177] &quot;ENSG00000183117&quot; &quot;ENSG00000213923&quot; &quot;ENSG00000102974&quot; &quot;ENSG00000066032&quot;
+[181] &quot;ENSG00000183230&quot; &quot;ENSG00000168036&quot; &quot;ENSG00000169862&quot; &quot;ENSG00000077063&quot;
+[185] &quot;ENSG00000036257&quot; &quot;ENSG00000044090&quot; &quot;ENSG00000257923&quot; &quot;ENSG00000111249&quot;
+[189] &quot;ENSG00000168329&quot; &quot;ENSG00000273749&quot; &quot;ENSG00000155833&quot; &quot;ENSG00000135929&quot;
+[193] &quot;ENSG00000134780&quot; &quot;ENSG00000070190&quot; &quot;ENSG00000215301&quot; &quot;ENSG00000184735&quot;
+[197] &quot;ENSG00000177030&quot; &quot;ENSG00000175161&quot; &quot;ENSG00000152495&quot; &quot;ENSG00000102181&quot;
+[201] &quot;ENSG00000149654&quot; &quot;ENSG00000113742&quot; &quot;ENSG00000160882&quot; &quot;ENSG00000132437&quot;
+[205] &quot;ENSG00000139726&quot; &quot;ENSG00000100150&quot; &quot;ENSG00000172893&quot; &quot;ENSG00000132153&quot;
+[209] &quot;ENSG00000160305&quot; &quot;ENSG00000151240&quot; &quot;ENSG00000162946&quot; &quot;ENSG00000181744&quot;
+[213] &quot;ENSG00000150764&quot; &quot;ENSG00000075711&quot; &quot;ENSG00000150672&quot; &quot;ENSG00000132535&quot;
+[217] &quot;ENSG00000170579&quot; &quot;ENSG00000198010&quot; &quot;ENSG00000116544&quot; &quot;ENSG00000198719&quot;
+[221] &quot;ENSG00000064195&quot; &quot;ENSG00000006377&quot; &quot;ENSG00000198947&quot; &quot;ENSG00000104936&quot;
+[225] &quot;ENSG00000185800&quot; &quot;ENSG00000104093&quot; &quot;ENSG00000197653&quot; &quot;ENSG00000187775&quot;
+[229] &quot;ENSG00000158486&quot; &quot;ENSG00000187957&quot; &quot;ENSG00000119772&quot; &quot;ENSG00000150760&quot;
+[233] &quot;ENSG00000128512&quot; &quot;ENSG00000107099&quot; &quot;ENSG00000175283&quot; &quot;ENSG00000175497&quot;
+[237] &quot;ENSG00000254986&quot; &quot;ENSG00000197635&quot; &quot;ENSG00000130226&quot; &quot;ENSG00000188641&quot;
+[241] &quot;ENSG00000092964&quot; &quot;ENSG00000113657&quot; &quot;ENSG00000149295&quot; &quot;ENSG00000151577&quot;
+[245] &quot;ENSG00000171587&quot; &quot;ENSG00000151914&quot; &quot;ENSG00000149599&quot; &quot;ENSG00000161202&quot;
+[249] &quot;ENSG00000170788&quot; &quot;ENSG00000133665&quot; &quot;ENSG00000197102&quot; &quot;ENSG00000157540&quot;
+[253] &quot;ENSG00000108001&quot; &quot;ENSG00000101210&quot; &quot;ENSG00000132294&quot; &quot;ENSG00000179388&quot;
+[257] &quot;ENSG00000181090&quot; &quot;ENSG00000165288&quot; &quot;ENSG00000073464&quot; &quot;ENSG00000115844&quot;
+[261] &quot;ENSG00000184845&quot; &quot;ENSG00000130811&quot; &quot;ENSG00000151247&quot; &quot;ENSG00000107105&quot;
+[265] &quot;ENSG00000196361&quot; &quot;ENSG00000197977&quot; &quot;ENSG00000109911&quot; &quot;ENSG00000164778&quot;
+[269] &quot;ENSG00000100393&quot; &quot;ENSG00000183495&quot; &quot;ENSG00000135999&quot; &quot;ENSG00000158636&quot;
+[273] &quot;ENSG00000133216&quot; &quot;ENSG00000261150&quot; &quot;ENSG00000157554&quot; &quot;ENSG00000136541&quot;
+[277] &quot;ENSG00000140009&quot; &quot;ENSG00000119715&quot; &quot;ENSG00000105379&quot; &quot;ENSG00000180104&quot;
+[281] &quot;ENSG00000070367&quot; &quot;ENSG00000138190&quot; &quot;ENSG00000144036&quot; &quot;ENSG00000182197&quot;
+[285] &quot;ENSG00000164687&quot; &quot;ENSG00000185448&quot; &quot;ENSG00000153789&quot; &quot;ENSG00000130244&quot;
+[289] &quot;ENSG00000198690&quot; &quot;ENSG00000083857&quot; &quot;ENSG00000166147&quot; &quot;ENSG00000112851&quot;
+[293] &quot;ENSG00000138081&quot; &quot;ENSG00000163833&quot; &quot;ENSG00000181036&quot; &quot;ENSG00000153266&quot;
+[297] &quot;ENSG00000171560&quot; &quot;ENSG00000189283&quot; &quot;ENSG00000102081&quot; &quot;ENSG00000176165&quot;
+[301] &quot;ENSG00000114861&quot; &quot;ENSG00000128573&quot; &quot;ENSG00000111816&quot; &quot;ENSG00000169933&quot;
+[305] &quot;ENSG00000136928&quot; &quot;ENSG00000011677&quot; &quot;ENSG00000109158&quot; &quot;ENSG00000166206&quot;
+[309] &quot;ENSG00000182256&quot; &quot;ENSG00000144278&quot; &quot;ENSG00000158089&quot; &quot;ENSG00000130035&quot;
+[313] &quot;ENSG00000171766&quot; &quot;ENSG00000119125&quot; &quot;ENSG00000278311&quot; &quot;ENSG00000146830&quot;
+[317] &quot;ENSG00000204120&quot; &quot;ENSG00000174332&quot; &quot;ENSG00000124767&quot; &quot;ENSG00000101958&quot;
+[321] &quot;ENSG00000087460&quot; &quot;ENSG00000185838&quot; &quot;ENSG00000076716&quot; &quot;ENSG00000183098&quot;
+[325] &quot;ENSG00000115159&quot; &quot;ENSG00000171723&quot; &quot;ENSG00000170775&quot; &quot;ENSG00000164604&quot;
+[329] &quot;ENSG00000155511&quot; &quot;ENSG00000120251&quot; &quot;ENSG00000182771&quot; &quot;ENSG00000152208&quot;
+[333] &quot;ENSG00000215045&quot; &quot;ENSG00000164418&quot; &quot;ENSG00000165355&quot; &quot;ENSG00000139354&quot;
+[337] &quot;ENSG00000233276&quot; &quot;ENSG00000163873&quot; &quot;ENSG00000149403&quot; &quot;ENSG00000105737&quot;
+[341] &quot;ENSG00000176884&quot; &quot;ENSG00000183454&quot; &quot;ENSG00000273079&quot; &quot;ENSG00000155974&quot;
+[345] &quot;ENSG00000168959&quot; &quot;ENSG00000196277&quot; &quot;ENSG00000134184&quot; &quot;ENSG00000263001&quot;
+[349] &quot;ENSG00000152402&quot; &quot;ENSG00000172534&quot; &quot;ENSG00000164588&quot; &quot;ENSG00000068024&quot;
+[353] &quot;ENSG00000147099&quot; &quot;ENSG00000115677&quot; &quot;ENSG00000173064&quot; &quot;ENSG00000138411&quot;
+[357] &quot;ENSG00000165478&quot; &quot;ENSG00000124635&quot; &quot;ENSG00000128731&quot; &quot;ENSG00000127124&quot;
+[361] &quot;ENSG00000206503&quot; &quot;ENSG00000234745&quot; &quot;ENSG00000223865&quot; &quot;ENSG00000196126&quot;
+[365] &quot;ENSG00000204632&quot; &quot;ENSG00000205581&quot; &quot;ENSG00000126945&quot; &quot;ENSG00000153187&quot;
+[369] &quot;ENSG00000152413&quot; &quot;ENSG00000105991&quot; &quot;ENSG00000174775&quot; &quot;ENSG00000249853&quot;
+[373] &quot;ENSG00000117594&quot; &quot;ENSG00000135312&quot; &quot;ENSG00000166736&quot; &quot;ENSG00000178084&quot;
+[377] &quot;ENSG00000086758&quot; &quot;ENSG00000157423&quot; &quot;ENSG00000003147&quot; &quot;ENSG00000115590&quot;
+[381] &quot;ENSG00000169306&quot; &quot;ENSG00000189108&quot; &quot;ENSG00000143621&quot; &quot;ENSG00000184903&quot;
+[385] &quot;ENSG00000151689&quot; &quot;ENSG00000164880&quot; &quot;ENSG00000102786&quot; &quot;ENSG00000183856&quot;
+[389] &quot;ENSG00000124313&quot; &quot;ENSG00000119669&quot; &quot;ENSG00000259207&quot; &quot;ENSG00000150995&quot;
+[393] &quot;ENSG00000205726&quot; &quot;ENSG00000008083&quot; &quot;ENSG00000171988&quot; &quot;ENSG00000107104&quot;
+[397] &quot;ENSG00000120071&quot; &quot;ENSG00000114166&quot; &quot;ENSG00000083168&quot; &quot;ENSG00000102781&quot;
+[401] &quot;ENSG00000167216&quot; &quot;ENSG00000158445&quot; &quot;ENSG00000129159&quot; &quot;ENSG00000184408&quot;
+[405] &quot;ENSG00000171385&quot; &quot;ENSG00000177807&quot; &quot;ENSG00000157551&quot; &quot;ENSG00000173338&quot;
+[409] &quot;ENSG00000156113&quot; &quot;ENSG00000075043&quot; &quot;ENSG00000184156&quot; &quot;ENSG00000170745&quot;
+[413] &quot;ENSG00000174943&quot; &quot;ENSG00000165097&quot; &quot;ENSG00000127663&quot; &quot;ENSG00000107077&quot;
+[417] &quot;ENSG00000117139&quot; &quot;ENSG00000126012&quot; &quot;ENSG00000147050&quot; &quot;ENSG00000132510&quot;
+[421] &quot;ENSG00000112232&quot; &quot;ENSG00000168116&quot; &quot;ENSG00000197892&quot; &quot;ENSG00000118193&quot;
+[425] &quot;ENSG00000168280&quot; &quot;ENSG00000149571&quot; &quot;ENSG00000129911&quot; &quot;ENSG00000118058&quot;
+[429] &quot;ENSG00000055609&quot; &quot;ENSG00000005483&quot; &quot;ENSG00000118162&quot; &quot;ENSG00000111615&quot;
+[433] &quot;ENSG00000186393&quot; &quot;ENSG00000101680&quot; &quot;ENSG00000091136&quot; &quot;ENSG00000166477&quot;
+[437] &quot;ENSG00000110066&quot; &quot;ENSG00000174697&quot; &quot;ENSG00000131042&quot; &quot;ENSG00000104863&quot;
+[441] &quot;ENSG00000136944&quot; &quot;ENSG00000198589&quot; &quot;ENSG00000156564&quot; &quot;ENSG00000165379&quot;
+[445] &quot;ENSG00000123384&quot; &quot;ENSG00000081479&quot; &quot;ENSG00000137269&quot; &quot;ENSG00000128594&quot;
+[449] &quot;ENSG00000099949&quot; &quot;ENSG00000107816&quot; &quot;ENSG00000172264&quot; &quot;ENSG00000144320&quot;
+[453] &quot;ENSG00000254585&quot; &quot;ENSG00000189221&quot; &quot;ENSG00000069535&quot; &quot;ENSG00000102882&quot;
+[457] &quot;ENSG00000116141&quot; &quot;ENSG00000141644&quot; &quot;ENSG00000071655&quot; &quot;ENSG00000129071&quot;
+[461] &quot;ENSG00000204406&quot; &quot;ENSG00000166987&quot; &quot;ENSG00000125505&quot; &quot;ENSG00000104738&quot;
+[465] &quot;ENSG00000076003&quot; &quot;ENSG00000147316&quot; &quot;ENSG00000139915&quot; &quot;ENSG00000169057&quot;
+[469] &quot;ENSG00000144893&quot; &quot;ENSG00000108510&quot; &quot;ENSG00000123066&quot; &quot;ENSG00000081189&quot;
+[473] &quot;ENSG00000145794&quot; &quot;ENSG00000157890&quot; &quot;ENSG00000134138&quot; &quot;ENSG00000162959&quot;
+[477] &quot;ENSG00000105976&quot; &quot;ENSG00000235718&quot; &quot;ENSG00000130731&quot; &quot;ENSG00000101752&quot;
+[481] &quot;ENSG00000120215&quot; &quot;ENSG00000070444&quot; &quot;ENSG00000105926&quot; &quot;ENSG00000120458&quot;
+[485] &quot;ENSG00000251593&quot; &quot;ENSG00000038945&quot; &quot;ENSG00000188786&quot; &quot;ENSG00000177000&quot;
+[489] &quot;ENSG00000198793&quot; &quot;ENSG00000205277&quot; &quot;ENSG00000145113&quot; &quot;ENSG00000284202&quot;
+[493] &quot;ENSG00000186260&quot; &quot;ENSG00000133026&quot; &quot;ENSG00000264424&quot; &quot;ENSG00000041515&quot;
+[497] &quot;ENSG00000157483&quot; &quot;ENSG00000197535&quot; &quot;ENSG00000128833&quot; &quot;ENSG00000099331&quot;
+[501] &quot;ENSG00000186487&quot; &quot;ENSG00000164134&quot; &quot;ENSG00000160877&quot; &quot;ENSG00000166833&quot;
+[505] &quot;ENSG00000172915&quot; &quot;ENSG00000061676&quot; &quot;ENSG00000176771&quot; &quot;ENSG00000141027&quot;
+[509] &quot;ENSG00000172260&quot; &quot;ENSG00000067141&quot; &quot;ENSG00000196712&quot; &quot;ENSG00000050344&quot;
+[513] &quot;ENSG00000162599&quot; &quot;ENSG00000147862&quot; &quot;ENSG00000008441&quot; &quot;ENSG00000101004&quot;
+[517] &quot;ENSG00000170113&quot; &quot;ENSG00000140157&quot; &quot;ENSG00000164190&quot; &quot;ENSG00000169760&quot;
+[521] &quot;ENSG00000050030&quot; &quot;ENSG00000169992&quot; &quot;ENSG00000196338&quot; &quot;ENSG00000146938&quot;
+[525] &quot;ENSG00000165246&quot; &quot;ENSG00000126368&quot; &quot;ENSG00000175745&quot; &quot;ENSG00000151623&quot;
+[529] &quot;ENSG00000153234&quot; &quot;ENSG00000091129&quot; &quot;ENSG00000118257&quot; &quot;ENSG00000179915&quot;
+[533] &quot;ENSG00000010818&quot; &quot;ENSG00000120733&quot; &quot;ENSG00000177694&quot; &quot;ENSG00000128609&quot;
+[537] &quot;ENSG00000264343&quot; &quot;ENSG00000170485&quot; &quot;ENSG00000110076&quot; &quot;ENSG00000021645&quot;
+[541] &quot;ENSG00000165671&quot; &quot;ENSG00000162631&quot; &quot;ENSG00000196358&quot; &quot;ENSG00000198400&quot;
+[545] &quot;ENSG00000148053&quot; &quot;ENSG00000140538&quot; &quot;ENSG00000074590&quot; &quot;ENSG00000185115&quot;
+[549] &quot;ENSG00000170584&quot; &quot;ENSG00000069248&quot; &quot;ENSG00000122584&quot; &quot;ENSG00000122126&quot;
+[553] &quot;ENSG00000181781&quot; &quot;ENSG00000046651&quot; &quot;ENSG00000079482&quot; &quot;ENSG00000221888&quot;
+[557] &quot;ENSG00000184022&quot; &quot;ENSG00000197790&quot; &quot;ENSG00000169918&quot; &quot;ENSG00000101405&quot;
+[561] &quot;ENSG00000180914&quot; &quot;ENSG00000083454&quot; &quot;ENSG00000072682&quot; &quot;ENSG00000175115&quot;
+[565] &quot;ENSG00000179364&quot; &quot;ENSG00000168092&quot; &quot;ENSG00000171759&quot; &quot;ENSG00000180370&quot;
+[569] &quot;ENSG00000115421&quot; &quot;ENSG00000116117&quot; &quot;ENSG00000196092&quot; &quot;ENSG00000007372&quot;
+[573] &quot;ENSG00000185630&quot; &quot;ENSG00000175198&quot; &quot;ENSG00000114054&quot; &quot;ENSG00000138650&quot;
+[577] &quot;ENSG00000102290&quot; &quot;ENSG00000150275&quot; &quot;ENSG00000165194&quot; &quot;ENSG00000132849&quot;
+[581] &quot;ENSG00000184226&quot; &quot;ENSG00000204970&quot; &quot;ENSG00000250120&quot; &quot;ENSG00000249158&quot;
+[585] &quot;ENSG00000251664&quot; &quot;ENSG00000239389&quot; &quot;ENSG00000204969&quot; &quot;ENSG00000255408&quot;
+[589] &quot;ENSG00000204967&quot; &quot;ENSG00000204965&quot; &quot;ENSG00000081842&quot; &quot;ENSG00000204963&quot;
+[593] &quot;ENSG00000204962&quot; &quot;ENSG00000204961&quot; &quot;ENSG00000248383&quot; &quot;ENSG00000078674&quot;
+[597] &quot;ENSG00000188389&quot; &quot;ENSG00000154678&quot; &quot;ENSG00000005882&quot; &quot;ENSG00000179094&quot;
+[601] &quot;ENSG00000132326&quot; &quot;ENSG00000112357&quot; &quot;ENSG00000197724&quot; &quot;ENSG00000135365&quot;
+[605] &quot;ENSG00000118482&quot; &quot;ENSG00000172943&quot; &quot;ENSG00000146247&quot; &quot;ENSG00000070047&quot;
+[609] &quot;ENSG00000105647&quot; &quot;ENSG00000069011&quot; &quot;ENSG00000011422&quot; &quot;ENSG00000182621&quot;
+[613] &quot;ENSG00000115556&quot; &quot;ENSG00000198523&quot; &quot;ENSG00000130827&quot; &quot;ENSG00000221866&quot;
+[617] &quot;ENSG00000164050&quot; &quot;ENSG00000130653&quot; &quot;ENSG00000143442&quot; &quot;ENSG00000014138&quot;
+[621] &quot;ENSG00000085998&quot; &quot;ENSG00000130714&quot; &quot;ENSG00000102977&quot; &quot;ENSG00000198914&quot;
+[625] &quot;ENSG00000131626&quot; &quot;ENSG00000170836&quot; &quot;ENSG00000113575&quot; &quot;ENSG00000137713&quot;
+[629] &quot;ENSG00000112640&quot; &quot;ENSG00000124126&quot; &quot;ENSG00000139174&quot; &quot;ENSG00000163637&quot;
+[633] &quot;ENSG00000188191&quot; &quot;ENSG00000154229&quot; &quot;ENSG00000166501&quot; &quot;ENSG00000184304&quot;
+[637] &quot;ENSG00000105287&quot; &quot;ENSG00000253729&quot; &quot;ENSG00000185345&quot; &quot;ENSG00000171180&quot;
+[641] &quot;ENSG00000115507&quot; &quot;ENSG00000243232&quot; &quot;ENSG00000167085&quot; &quot;ENSG00000105851&quot;
+[645] &quot;ENSG00000005421&quot; &quot;ENSG00000131771&quot; &quot;ENSG00000100033&quot; &quot;ENSG00000185246&quot;
+[649] &quot;ENSG00000126464&quot; &quot;ENSG00000106772&quot; &quot;ENSG00000156011&quot; &quot;ENSG00000197170&quot;
+[653] &quot;ENSG00000117569&quot; &quot;ENSG00000165186&quot; &quot;ENSG00000171862&quot; &quot;ENSG00000233067&quot;
+[657] &quot;ENSG00000073756&quot; &quot;ENSG00000112655&quot; &quot;ENSG00000179295&quot; &quot;ENSG00000127329&quot;
+[661] &quot;ENSG00000081237&quot; &quot;ENSG00000196090&quot; &quot;ENSG00000130508&quot; &quot;ENSG00000163564&quot;
+[665] &quot;ENSG00000198218&quot; &quot;ENSG00000135631&quot; &quot;ENSG00000104388&quot; &quot;ENSG00000155961&quot;
+[669] &quot;ENSG00000172780&quot; &quot;ENSG00000136238&quot; &quot;ENSG00000164754&quot; &quot;ENSG00000244588&quot;
+[673] &quot;ENSG00000108557&quot; &quot;ENSG00000006451&quot; &quot;ENSG00000170471&quot; &quot;ENSG00000204764&quot;
+[677] &quot;ENSG00000091428&quot; &quot;ENSG00000266094&quot; &quot;ENSG00000078328&quot; &quot;ENSG00000091009&quot;
+[681] &quot;ENSG00000165476&quot; &quot;ENSG00000189056&quot; &quot;ENSG00000142599&quot; &quot;ENSG00000080298&quot;
+[685] &quot;ENSG00000182901&quot; &quot;ENSG00000106615&quot; &quot;ENSG00000101883&quot; &quot;ENSG00000079841&quot;
+[689] &quot;ENSG00000117016&quot; &quot;ENSG00000152214&quot; &quot;ENSG00000131263&quot; &quot;ENSG00000181481&quot;
+[693] &quot;ENSG00000163481&quot; &quot;ENSG00000137075&quot; &quot;ENSG00000185008&quot; &quot;ENSG00000069667&quot;
+[697] &quot;ENSG00000198963&quot; &quot;ENSG00000147403&quot; &quot;ENSG00000182591&quot; &quot;ENSG00000071242&quot;
+[701] &quot;ENSG00000177189&quot; &quot;ENSG00000142230&quot; &quot;ENSG00000187634&quot; &quot;ENSG00000111961&quot;
+[705] &quot;ENSG00000119042&quot; &quot;ENSG00000100241&quot; &quot;ENSG00000184178&quot; &quot;ENSG00000144285&quot;
+[709] &quot;ENSG00000136531&quot; &quot;ENSG00000007314&quot; &quot;ENSG00000196876&quot; &quot;ENSG00000169432&quot;
+[713] &quot;ENSG00000116171&quot; &quot;ENSG00000169439&quot; &quot;ENSG00000112902&quot; &quot;ENSG00000152217&quot;
+[717] &quot;ENSG00000152217&quot; &quot;ENSG00000139718&quot; &quot;ENSG00000181555&quot; &quot;ENSG00000168137&quot;
+[721] &quot;ENSG00000143379&quot; &quot;ENSG00000136169&quot; &quot;ENSG00000174938&quot; &quot;ENSG00000115524&quot;
+[725] &quot;ENSG00000181523&quot; &quot;ENSG00000100359&quot; &quot;ENSG00000172985&quot; &quot;ENSG00000161681&quot;
+[729] &quot;ENSG00000162105&quot; &quot;ENSG00000251322&quot; &quot;ENSG00000185960&quot; &quot;ENSG00000142178&quot;
+[733] &quot;ENSG00000169375&quot; &quot;ENSG00000124140&quot; &quot;ENSG00000106688&quot; &quot;ENSG00000110436&quot;
+[737] &quot;ENSG00000149742&quot; &quot;ENSG00000155886&quot; &quot;ENSG00000115840&quot; &quot;ENSG00000013306&quot;
+[741] &quot;ENSG00000167114&quot; &quot;ENSG00000164638&quot; &quot;ENSG00000157637&quot; &quot;ENSG00000162426&quot;
+[745] &quot;ENSG00000144290&quot; &quot;ENSG00000157103&quot; &quot;ENSG00000142319&quot; &quot;ENSG00000108576&quot;
+[749] &quot;ENSG00000130821&quot; &quot;ENSG00000165349&quot; &quot;ENSG00000103257&quot; &quot;ENSG00000155465&quot;
+[753] &quot;ENSG00000198689&quot; &quot;ENSG00000181804&quot; &quot;ENSG00000111700&quot; &quot;ENSG00000165300&quot;
+[757] &quot;ENSG00000141646&quot; &quot;ENSG00000080503&quot; &quot;ENSG00000127616&quot; &quot;ENSG00000106366&quot;
+[761] &quot;ENSG00000163393&quot; &quot;ENSG00000153291&quot; &quot;ENSG00000121073&quot; &quot;ENSG00000139613&quot;
+[765] &quot;ENSG00000072501&quot; &quot;ENSG00000108055&quot; &quot;ENSG00000070366&quot; &quot;ENSG00000198742&quot;
+[769] &quot;ENSG00000132639&quot; &quot;ENSG00000197157&quot; &quot;ENSG00000172554&quot; &quot;ENSG00000135317&quot;
+[773] &quot;ENSG00000089006&quot; &quot;ENSG00000142168&quot; &quot;ENSG00000115904&quot; &quot;ENSG00000134532&quot;
+[777] &quot;ENSG00000152583&quot; &quot;ENSG00000021574&quot; &quot;ENSG00000124614&quot; &quot;ENSG00000149269&quot;
+[781] &quot;ENSG00000065526&quot; &quot;ENSG00000072080&quot; &quot;ENSG00000080603&quot; &quot;ENSG00000196220&quot;
+[785] &quot;ENSG00000116754&quot; &quot;ENSG00000197558&quot; &quot;ENSG00000149136&quot; &quot;ENSG00000007341&quot;
+[789] &quot;ENSG00000140557&quot; &quot;ENSG00000118007&quot; &quot;ENSG00000198648&quot; &quot;ENSG00000106089&quot;
+[793] &quot;ENSG00000136854&quot; &quot;ENSG00000164506&quot; &quot;ENSG00000060140&quot; &quot;ENSG00000169895&quot;
+[797] &quot;ENSG00000008056&quot; &quot;ENSG00000157152&quot; &quot;ENSG00000135316&quot; &quot;ENSG00000131018&quot;
+[801] &quot;ENSG00000197283&quot; &quot;ENSG00000159082&quot; &quot;ENSG00000067715&quot; &quot;ENSG00000103528&quot;
+[805] &quot;ENSG00000147133&quot; &quot;ENSG00000103168&quot; &quot;ENSG00000106290&quot; &quot;ENSG00000170921&quot;
+[809] &quot;ENSG00000160551&quot; &quot;ENSG00000149930&quot; &quot;ENSG00000036054&quot; &quot;ENSG00000156787&quot;
+[813] &quot;ENSG00000131374&quot; &quot;ENSG00000145348&quot; &quot;ENSG00000101849&quot; &quot;ENSG00000177565&quot;
+[817] &quot;ENSG00000136535&quot; &quot;ENSG00000184058&quot; &quot;ENSG00000100207&quot; &quot;ENSG00000196628&quot;
+[821] &quot;ENSG00000148737&quot; &quot;ENSG00000151790&quot; &quot;ENSG00000109927&quot; &quot;ENSG00000132604&quot;
+[825] &quot;ENSG00000168769&quot; &quot;ENSG00000137801&quot; &quot;ENSG00000126351&quot; &quot;ENSG00000146872&quot;
+[829] &quot;ENSG00000145107&quot; &quot;ENSG00000168955&quot; &quot;ENSG00000121775&quot; &quot;ENSG00000185973&quot;
+[833] &quot;ENSG00000100354&quot; &quot;ENSG00000100038&quot; &quot;ENSG00000167014&quot; &quot;ENSG00000131653&quot;
+[837] &quot;ENSG00000182400&quot; &quot;ENSG00000167632&quot; &quot;ENSG00000038382&quot; &quot;ENSG00000153827&quot;
+[841] &quot;ENSG00000137672&quot; &quot;ENSG00000134160&quot; &quot;ENSG00000196367&quot; &quot;ENSG00000165699&quot;
+[845] &quot;ENSG00000103197&quot; &quot;ENSG00000121297&quot; &quot;ENSG00000048140&quot; &quot;ENSG00000214063&quot;
+[849] &quot;ENSG00000156298&quot; &quot;ENSG00000129696&quot; &quot;ENSG00000155657&quot; &quot;ENSG00000275835&quot;
+[853] &quot;ENSG00000114062&quot; &quot;ENSG00000005379&quot; &quot;ENSG00000009335&quot; &quot;ENSG00000157741&quot;
+[857] &quot;ENSG00000104517&quot; &quot;ENSG00000087206&quot; &quot;ENSG00000130477&quot; &quot;ENSG00000133958&quot;
+[861] &quot;ENSG00000144406&quot; &quot;ENSG00000151461&quot; &quot;ENSG00000125351&quot; &quot;ENSG00000042781&quot;
+[865] &quot;ENSG00000135655&quot; &quot;ENSG00000123552&quot; &quot;ENSG00000187555&quot; &quot;ENSG00000124486&quot;
+[869] &quot;ENSG00000114374&quot; &quot;ENSG00000220205&quot; &quot;ENSG00000127831&quot; &quot;ENSG00000132549&quot;
+[873] &quot;ENSG00000115705&quot; &quot;ENSG00000197323&quot; &quot;ENSG00000204815&quot; &quot;ENSG00000186591&quot;
+[877] &quot;ENSG00000071246&quot; &quot;ENSG00000111424&quot; &quot;ENSG00000155659&quot; &quot;ENSG00000095787&quot;
+[881] &quot;ENSG00000112290&quot; &quot;ENSG00000163625&quot; &quot;ENSG00000128815&quot; &quot;ENSG00000162923&quot;
+[885] &quot;ENSG00000196632&quot; &quot;ENSG00000125084&quot; &quot;ENSG00000186153&quot; &quot;ENSG00000154767&quot;
+[889] &quot;ENSG00000082898&quot; &quot;ENSG00000163872&quot; &quot;ENSG00000047188&quot; &quot;ENSG00000108953&quot;
+[893] &quot;ENSG00000100811&quot; &quot;ENSG00000109906&quot; &quot;ENSG00000181722&quot; &quot;ENSG00000058673&quot;
+[897] &quot;ENSG00000130749&quot; &quot;ENSG00000072121&quot; &quot;ENSG00000015171&quot; &quot;ENSG00000154957&quot;
+[901] &quot;ENSG00000188994&quot; &quot;ENSG00000144331&quot; &quot;ENSG00000148143&quot; &quot;ENSG00000197363&quot;
+[905] &quot;ENSG00000188785&quot; &quot;ENSG00000188321&quot; &quot;ENSG00000188171&quot; &quot;ENSG00000178665&quot;
+[909] &quot;ENSG00000196391&quot; &quot;ENSG00000170396&quot; &quot;ENSG00000151612&quot; &quot;ENSG00000130449&quot;
+[913] &quot;ENSG00000174442&quot;
+
+$Gene_SFARI_high
+  [1] &quot;ENSG00000087085&quot; &quot;ENSG00000075624&quot; NA                NA               
+  [5] &quot;ENSG00000196839&quot; &quot;ENSG00000138031&quot; &quot;ENSG00000101126&quot; &quot;ENSG00000239900&quot;
+  [9] &quot;ENSG00000155966&quot; &quot;ENSG00000135439&quot; &quot;ENSG00000092847&quot; &quot;ENSG00000134698&quot;
+ [13] &quot;ENSG00000126705&quot; NA                &quot;ENSG00000127914&quot; NA               
+ [17] &quot;ENSG00000112294&quot; &quot;ENSG00000116748&quot; &quot;ENSG00000145020&quot; &quot;ENSG00000145362&quot;
+ [21] &quot;ENSG00000151150&quot; &quot;ENSG00000167522&quot; &quot;ENSG00000135046&quot; NA               
+ [25] &quot;ENSG00000166313&quot; &quot;ENSG00000117362&quot; &quot;ENSG00000131089&quot; &quot;ENSG00000049618&quot;
+ [29] &quot;ENSG00000004848&quot; NA                &quot;ENSG00000151693&quot; &quot;ENSG00000116539&quot;
+ [33] &quot;ENSG00000066279&quot; &quot;ENSG00000148219&quot; &quot;ENSG00000141431&quot; &quot;ENSG00000206190&quot;
+ [37] &quot;ENSG00000157087&quot; &quot;ENSG00000085224&quot; &quot;ENSG00000158321&quot; &quot;ENSG00000166148&quot;
+ [41] &quot;ENSG00000123636&quot; &quot;ENSG00000103507&quot; &quot;ENSG00000119866&quot; NA               
+ [45] &quot;ENSG00000157764&quot; &quot;ENSG00000174672&quot; &quot;ENSG00000095564&quot; NA               
+ [49] NA                &quot;ENSG00000151067&quot; &quot;ENSG00000157388&quot; &quot;ENSG00000198216&quot;
+ [53] &quot;ENSG00000196557&quot; &quot;ENSG00000157445&quot; &quot;ENSG00000165995&quot; NA               
+ [57] &quot;ENSG00000135387&quot; &quot;ENSG00000147044&quot; &quot;ENSG00000130940&quot; &quot;ENSG00000132024&quot;
+ [61] &quot;ENSG00000113328&quot; NA                &quot;ENSG00000115484&quot; &quot;ENSG00000198752&quot;
+ [65] &quot;ENSG00000140945&quot; NA                NA                &quot;ENSG00000008086&quot;
+ [69] &quot;ENSG00000101489&quot; &quot;ENSG00000174799&quot; &quot;ENSG00000106477&quot; &quot;ENSG00000128849&quot;
+ [73] &quot;ENSG00000198824&quot; &quot;ENSG00000173575&quot; &quot;ENSG00000170004&quot; &quot;ENSG00000171316&quot;
+ [77] &quot;ENSG00000100888&quot; NA                &quot;ENSG00000131165&quot; &quot;ENSG00000166664&quot;
+ [81] &quot;ENSG00000136425&quot; &quot;ENSG00000079432&quot; &quot;ENSG00000074054&quot; &quot;ENSG00000149970&quot;
+ [85] &quot;ENSG00000088038&quot; &quot;ENSG00000118432&quot; &quot;ENSG00000144619&quot; &quot;ENSG00000149972&quot;
+ [89] &quot;ENSG00000134115&quot; &quot;ENSG00000174469&quot; &quot;ENSG00000106714&quot; &quot;ENSG00000152910&quot;
+ [93] &quot;ENSG00000005339&quot; &quot;ENSG00000009307&quot; &quot;ENSG00000102974&quot; NA               
+ [97] &quot;ENSG00000168036&quot; &quot;ENSG00000169862&quot; &quot;ENSG00000077063&quot; &quot;ENSG00000036257&quot;
+[101] &quot;ENSG00000044090&quot; &quot;ENSG00000257923&quot; &quot;ENSG00000273749&quot; NA               
+[105] &quot;ENSG00000070190&quot; &quot;ENSG00000215301&quot; &quot;ENSG00000177030&quot; &quot;ENSG00000113742&quot;
+[109] &quot;ENSG00000139726&quot; NA                &quot;ENSG00000172893&quot; NA               
+[113] &quot;ENSG00000160305&quot; &quot;ENSG00000151240&quot; &quot;ENSG00000162946&quot; &quot;ENSG00000150672&quot;
+[117] &quot;ENSG00000132535&quot; &quot;ENSG00000170579&quot; &quot;ENSG00000064195&quot; NA               
+[121] &quot;ENSG00000104936&quot; &quot;ENSG00000119772&quot; &quot;ENSG00000107099&quot; NA               
+[125] &quot;ENSG00000175497&quot; &quot;ENSG00000092964&quot; &quot;ENSG00000171587&quot; &quot;ENSG00000197102&quot;
+[129] &quot;ENSG00000157540&quot; &quot;ENSG00000108001&quot; NA                &quot;ENSG00000132294&quot;
+[133] &quot;ENSG00000181090&quot; NA                &quot;ENSG00000196361&quot; &quot;ENSG00000109911&quot;
+[137] &quot;ENSG00000100393&quot; &quot;ENSG00000183495&quot; &quot;ENSG00000158636&quot; &quot;ENSG00000105379&quot;
+[141] &quot;ENSG00000153789&quot; &quot;ENSG00000166147&quot; &quot;ENSG00000112851&quot; &quot;ENSG00000102081&quot;
+[145] &quot;ENSG00000176165&quot; &quot;ENSG00000114861&quot; &quot;ENSG00000128573&quot; NA               
+[149] NA                &quot;ENSG00000166206&quot; &quot;ENSG00000182256&quot; &quot;ENSG00000130035&quot;
+[153] NA                &quot;ENSG00000278311&quot; &quot;ENSG00000146830&quot; &quot;ENSG00000204120&quot;
+[157] &quot;ENSG00000076716&quot; &quot;ENSG00000171723&quot; &quot;ENSG00000155511&quot; &quot;ENSG00000120251&quot;
+[161] &quot;ENSG00000182771&quot; &quot;ENSG00000164418&quot; &quot;ENSG00000105737&quot; &quot;ENSG00000176884&quot;
+[165] &quot;ENSG00000183454&quot; &quot;ENSG00000273079&quot; &quot;ENSG00000155974&quot; NA               
+[169] NA                NA                &quot;ENSG00000173064&quot; &quot;ENSG00000138411&quot;
+[173] NA                NA                &quot;ENSG00000127124&quot; &quot;ENSG00000205581&quot;
+[177] &quot;ENSG00000126945&quot; &quot;ENSG00000153187&quot; NA                &quot;ENSG00000174775&quot;
+[181] NA                &quot;ENSG00000003147&quot; &quot;ENSG00000143621&quot; NA               
+[185] &quot;ENSG00000102786&quot; &quot;ENSG00000124313&quot; &quot;ENSG00000119669&quot; &quot;ENSG00000259207&quot;
+[189] &quot;ENSG00000008083&quot; &quot;ENSG00000120071&quot; &quot;ENSG00000114166&quot; &quot;ENSG00000083168&quot;
+[193] &quot;ENSG00000167216&quot; &quot;ENSG00000158445&quot; &quot;ENSG00000177807&quot; &quot;ENSG00000075043&quot;
+[197] &quot;ENSG00000184156&quot; &quot;ENSG00000170745&quot; &quot;ENSG00000107077&quot; &quot;ENSG00000117139&quot;
+[201] &quot;ENSG00000126012&quot; &quot;ENSG00000147050&quot; &quot;ENSG00000132510&quot; &quot;ENSG00000168116&quot;
+[205] &quot;ENSG00000118193&quot; &quot;ENSG00000149571&quot; &quot;ENSG00000118058&quot; &quot;ENSG00000055609&quot;
+[209] &quot;ENSG00000005483&quot; NA                &quot;ENSG00000091136&quot; &quot;ENSG00000166477&quot;
+[213] &quot;ENSG00000110066&quot; &quot;ENSG00000136944&quot; &quot;ENSG00000123384&quot; &quot;ENSG00000099949&quot;
+[217] &quot;ENSG00000172264&quot; NA                &quot;ENSG00000254585&quot; &quot;ENSG00000204406&quot;
+[221] &quot;ENSG00000125505&quot; &quot;ENSG00000169057&quot; &quot;ENSG00000108510&quot; &quot;ENSG00000123066&quot;
+[225] &quot;ENSG00000134138&quot; &quot;ENSG00000105976&quot; &quot;ENSG00000235718&quot; &quot;ENSG00000251593&quot;
+[229] &quot;ENSG00000198793&quot; &quot;ENSG00000284202&quot; &quot;ENSG00000133026&quot; &quot;ENSG00000197535&quot;
+[233] &quot;ENSG00000099331&quot; &quot;ENSG00000186487&quot; &quot;ENSG00000164134&quot; &quot;ENSG00000166833&quot;
+[237] &quot;ENSG00000172915&quot; &quot;ENSG00000061676&quot; &quot;ENSG00000141027&quot; &quot;ENSG00000196712&quot;
+[241] &quot;ENSG00000050344&quot; NA                &quot;ENSG00000101004&quot; &quot;ENSG00000164190&quot;
+[245] &quot;ENSG00000169760&quot; &quot;ENSG00000050030&quot; &quot;ENSG00000169992&quot; &quot;ENSG00000196338&quot;
+[249] &quot;ENSG00000146938&quot; &quot;ENSG00000151623&quot; &quot;ENSG00000153234&quot; &quot;ENSG00000179915&quot;
+[253] &quot;ENSG00000010818&quot; &quot;ENSG00000120733&quot; &quot;ENSG00000110076&quot; &quot;ENSG00000021645&quot;
+[257] &quot;ENSG00000165671&quot; NA                NA                &quot;ENSG00000074590&quot;
+[261] &quot;ENSG00000170584&quot; NA                &quot;ENSG00000079482&quot; &quot;ENSG00000197790&quot;
+[265] &quot;ENSG00000169918&quot; &quot;ENSG00000180914&quot; &quot;ENSG00000083454&quot; &quot;ENSG00000072682&quot;
+[269] &quot;ENSG00000175115&quot; NA                &quot;ENSG00000171759&quot; &quot;ENSG00000180370&quot;
+[273] &quot;ENSG00000116117&quot; &quot;ENSG00000196092&quot; NA                NA               
+[277] NA                &quot;ENSG00000165194&quot; &quot;ENSG00000132326&quot; &quot;ENSG00000197724&quot;
+[281] &quot;ENSG00000135365&quot; &quot;ENSG00000118482&quot; NA                &quot;ENSG00000146247&quot;
+[285] &quot;ENSG00000070047&quot; NA                &quot;ENSG00000182621&quot; &quot;ENSG00000221866&quot;
+[289] &quot;ENSG00000164050&quot; &quot;ENSG00000143442&quot; &quot;ENSG00000085998&quot; NA               
+[293] NA                &quot;ENSG00000112640&quot; &quot;ENSG00000124126&quot; &quot;ENSG00000139174&quot;
+[297] &quot;ENSG00000163637&quot; &quot;ENSG00000166501&quot; NA                &quot;ENSG00000105287&quot;
+[301] &quot;ENSG00000185345&quot; &quot;ENSG00000167085&quot; &quot;ENSG00000005421&quot; &quot;ENSG00000100033&quot;
+[305] NA                &quot;ENSG00000197170&quot; &quot;ENSG00000165186&quot; &quot;ENSG00000171862&quot;
+[309] &quot;ENSG00000233067&quot; &quot;ENSG00000112655&quot; &quot;ENSG00000179295&quot; &quot;ENSG00000163564&quot;
+[313] &quot;ENSG00000198218&quot; &quot;ENSG00000104388&quot; &quot;ENSG00000172780&quot; NA               
+[317] NA                &quot;ENSG00000108557&quot; NA                &quot;ENSG00000170471&quot;
+[321] &quot;ENSG00000204764&quot; &quot;ENSG00000078328&quot; &quot;ENSG00000091009&quot; &quot;ENSG00000189056&quot;
+[325] &quot;ENSG00000142599&quot; &quot;ENSG00000080298&quot; NA                &quot;ENSG00000079841&quot;
+[329] NA                &quot;ENSG00000185008&quot; NA                &quot;ENSG00000198963&quot;
+[333] &quot;ENSG00000142230&quot; &quot;ENSG00000100241&quot; &quot;ENSG00000144285&quot; &quot;ENSG00000136531&quot;
+[337] &quot;ENSG00000196876&quot; &quot;ENSG00000169432&quot; &quot;ENSG00000112902&quot; &quot;ENSG00000152217&quot;
+[341] &quot;ENSG00000152217&quot; &quot;ENSG00000181555&quot; &quot;ENSG00000168137&quot; NA               
+[345] &quot;ENSG00000161681&quot; &quot;ENSG00000162105&quot; &quot;ENSG00000251322&quot; &quot;ENSG00000185960&quot;
+[349] NA                &quot;ENSG00000169375&quot; &quot;ENSG00000124140&quot; NA               
+[353] &quot;ENSG00000157637&quot; NA                &quot;ENSG00000157103&quot; &quot;ENSG00000142319&quot;
+[357] &quot;ENSG00000165349&quot; &quot;ENSG00000103257&quot; &quot;ENSG00000198689&quot; &quot;ENSG00000165300&quot;
+[361] &quot;ENSG00000141646&quot; NA                &quot;ENSG00000127616&quot; &quot;ENSG00000121073&quot;
+[365] &quot;ENSG00000139613&quot; NA                NA                &quot;ENSG00000089006&quot;
+[369] &quot;ENSG00000115904&quot; &quot;ENSG00000134532&quot; &quot;ENSG00000152583&quot; &quot;ENSG00000021574&quot;
+[373] &quot;ENSG00000124614&quot; NA                &quot;ENSG00000065526&quot; &quot;ENSG00000080603&quot;
+[377] &quot;ENSG00000116754&quot; &quot;ENSG00000140557&quot; NA                &quot;ENSG00000136854&quot;
+[381] &quot;ENSG00000164506&quot; &quot;ENSG00000197283&quot; NA                NA               
+[385] &quot;ENSG00000106290&quot; &quot;ENSG00000170921&quot; &quot;ENSG00000160551&quot; &quot;ENSG00000149930&quot;
+[389] NA                &quot;ENSG00000156787&quot; &quot;ENSG00000145348&quot; &quot;ENSG00000177565&quot;
+[393] &quot;ENSG00000136535&quot; NA                &quot;ENSG00000100207&quot; &quot;ENSG00000196628&quot;
+[397] &quot;ENSG00000148737&quot; &quot;ENSG00000132604&quot; &quot;ENSG00000168769&quot; &quot;ENSG00000146872&quot;
+[401] NA                &quot;ENSG00000185973&quot; &quot;ENSG00000100354&quot; NA               
+[405] &quot;ENSG00000167632&quot; &quot;ENSG00000038382&quot; &quot;ENSG00000153827&quot; &quot;ENSG00000137672&quot;
+[409] &quot;ENSG00000134160&quot; &quot;ENSG00000165699&quot; &quot;ENSG00000103197&quot; &quot;ENSG00000121297&quot;
+[413] NA                &quot;ENSG00000114062&quot; &quot;ENSG00000009335&quot; &quot;ENSG00000157741&quot;
+[417] &quot;ENSG00000104517&quot; &quot;ENSG00000133958&quot; &quot;ENSG00000125351&quot; &quot;ENSG00000135655&quot;
+[421] &quot;ENSG00000123552&quot; &quot;ENSG00000187555&quot; NA                NA               
+[425] &quot;ENSG00000127831&quot; &quot;ENSG00000132549&quot; &quot;ENSG00000095787&quot; NA               
+[429] &quot;ENSG00000163625&quot; &quot;ENSG00000128815&quot; NA                &quot;ENSG00000186153&quot;
+[433] NA                NA                &quot;ENSG00000181722&quot; &quot;ENSG00000130749&quot;
+[437] &quot;ENSG00000015171&quot; &quot;ENSG00000188994&quot; &quot;ENSG00000148143&quot; &quot;ENSG00000170396&quot;
+[441] NA               
+
+$Gene_SFARI_syndromic
+  [1] &quot;ENSG00000077080&quot; &quot;ENSG00000243989&quot; &quot;ENSG00000135541&quot; &quot;ENSG00000184254&quot;
+  [5] &quot;ENSG00000185046&quot; &quot;ENSG00000182287&quot; &quot;ENSG00000189079&quot; &quot;ENSG00000088035&quot;
+  [9] &quot;ENSG00000163399&quot; &quot;ENSG00000105409&quot; &quot;ENSG00000085185&quot; &quot;ENSG00000111678&quot;
+ [13] &quot;ENSG00000141837&quot; &quot;ENSG00000070808&quot; &quot;ENSG00000058404&quot; &quot;ENSG00000090061&quot;
+ [17] &quot;ENSG00000065883&quot; &quot;ENSG00000132964&quot; &quot;ENSG00000198707&quot; &quot;ENSG00000153922&quot;
+ [21] &quot;ENSG00000100288&quot; &quot;ENSG00000149970&quot; &quot;ENSG00000174469&quot; &quot;ENSG00000009307&quot;
+ [25] &quot;ENSG00000066032&quot; &quot;ENSG00000111249&quot; &quot;ENSG00000135929&quot; &quot;ENSG00000177030&quot;
+ [29] &quot;ENSG00000100150&quot; &quot;ENSG00000132153&quot; &quot;ENSG00000198719&quot; &quot;ENSG00000198947&quot;
+ [33] &quot;ENSG00000175283&quot; &quot;ENSG00000101210&quot; &quot;ENSG00000165288&quot; &quot;ENSG00000073464&quot;
+ [37] &quot;ENSG00000138081&quot; &quot;ENSG00000169933&quot; &quot;ENSG00000136928&quot; &quot;ENSG00000011677&quot;
+ [41] &quot;ENSG00000171766&quot; &quot;ENSG00000172534&quot; &quot;ENSG00000164588&quot; &quot;ENSG00000068024&quot;
+ [45] &quot;ENSG00000147099&quot; &quot;ENSG00000165478&quot; &quot;ENSG00000128731&quot; &quot;ENSG00000105991&quot;
+ [49] &quot;ENSG00000086758&quot; &quot;ENSG00000164880&quot; &quot;ENSG00000083168&quot; &quot;ENSG00000168280&quot;
+ [53] &quot;ENSG00000005483&quot; &quot;ENSG00000118162&quot; &quot;ENSG00000144320&quot; &quot;ENSG00000144893&quot;
+ [57] &quot;ENSG00000081189&quot; &quot;ENSG00000198793&quot; &quot;ENSG00000160877&quot; &quot;ENSG00000147862&quot;
+ [61] &quot;ENSG00000008441&quot; &quot;ENSG00000175745&quot; &quot;ENSG00000151623&quot; &quot;ENSG00000162631&quot;
+ [65] &quot;ENSG00000196358&quot; &quot;ENSG00000148053&quot; &quot;ENSG00000122126&quot; &quot;ENSG00000179364&quot;
+ [69] &quot;ENSG00000007372&quot; &quot;ENSG00000175198&quot; &quot;ENSG00000114054&quot; &quot;ENSG00000172943&quot;
+ [73] &quot;ENSG00000105647&quot; &quot;ENSG00000198914&quot; &quot;ENSG00000170836&quot; &quot;ENSG00000113575&quot;
+ [77] &quot;ENSG00000184304&quot; &quot;ENSG00000100033&quot; &quot;ENSG00000126464&quot; &quot;ENSG00000136238&quot;
+ [81] &quot;ENSG00000164754&quot; &quot;ENSG00000006451&quot; &quot;ENSG00000106615&quot; &quot;ENSG00000131263&quot;
+ [85] &quot;ENSG00000181481&quot; &quot;ENSG00000069667&quot; &quot;ENSG00000177189&quot; &quot;ENSG00000119042&quot;
+ [89] &quot;ENSG00000139718&quot; &quot;ENSG00000181523&quot; &quot;ENSG00000142178&quot; &quot;ENSG00000110436&quot;
+ [93] &quot;ENSG00000162426&quot; &quot;ENSG00000080503&quot; &quot;ENSG00000072501&quot; &quot;ENSG00000108055&quot;
+ [97] &quot;ENSG00000135317&quot; &quot;ENSG00000149269&quot; &quot;ENSG00000118007&quot; &quot;ENSG00000131018&quot;
+[101] &quot;ENSG00000067715&quot; &quot;ENSG00000147133&quot; &quot;ENSG00000036054&quot; &quot;ENSG00000184058&quot;
+[105] &quot;ENSG00000168955&quot; &quot;ENSG00000131653&quot; &quot;ENSG00000182400&quot; &quot;ENSG00000196367&quot;
+[109] &quot;ENSG00000129696&quot; &quot;ENSG00000155657&quot; &quot;ENSG00000130477&quot; &quot;ENSG00000187555&quot;
+[113] &quot;ENSG00000124486&quot; &quot;ENSG00000220205&quot; &quot;ENSG00000112290&quot; &quot;ENSG00000162923&quot;
+[117] &quot;ENSG00000154767&quot; &quot;ENSG00000100811&quot; &quot;ENSG00000130449&quot;</code></pre>
+<p>Gene sets from Birnbaum et al. : 10 gene sets across SCZ, ASD, neurodevelopmental disorders, intellectual disability, bipolar disorder, and neurodegenerative disorders.</p>
+<pre class="r"><code>sheet_data &lt;- read.xlsx(file.path(&quot;_annotation_data&quot;,&quot;NIHMS613902-supplement-Supplement_Data.xlsx&quot;),sheet = &quot;Supp Table 1 Gene Sets&quot;)
+df &lt;- sheet_data[, 1:2]
+
+
+cell_types_birnbaum &lt;- split(df[,2],df[,1])
+cell_types_birnbaum &lt;- lapply(cell_types_birnbaum,
+                     function(x, speids, spesyms)
+                       speids[spesyms %in% x],
+                     rownames(spe.filt), rowData(spe.filt)$gene_name)
+cell_types_birnbaum &lt;- cell_types_birnbaum[lengths(cell_types_birnbaum) &gt; 1]
+length(cell_types_birnbaum)
+[1] 10</code></pre>
+<pre class="r"><code>names(cell_types_birnbaum) &lt;- make.names(names(cell_types_birnbaum))
+head(cell_types_birnbaum)
+$ASD.CNV
+  [1] &quot;ENSG00000131791&quot; &quot;ENSG00000116128&quot; &quot;ENSG00000179915&quot; &quot;ENSG00000151276&quot;
+  [5] &quot;ENSG00000172340&quot; &quot;ENSG00000144747&quot; &quot;ENSG00000144744&quot; &quot;ENSG00000144746&quot;
+  [9] &quot;ENSG00000114541&quot; &quot;ENSG00000169862&quot; &quot;ENSG00000009954&quot; &quot;ENSG00000106635&quot;
+ [13] &quot;ENSG00000106638&quot; &quot;ENSG00000176428&quot; &quot;ENSG00000176410&quot; &quot;ENSG00000106089&quot;
+ [17] &quot;ENSG00000106077&quot; &quot;ENSG00000165215&quot; &quot;ENSG00000189143&quot; &quot;ENSG00000049540&quot;
+ [21] &quot;ENSG00000106683&quot; &quot;ENSG00000049541&quot; &quot;ENSG00000106665&quot; &quot;ENSG00000006704&quot;
+ [25] &quot;ENSG00000128512&quot; &quot;ENSG00000198010&quot; &quot;ENSG00000172785&quot; &quot;ENSG00000177613&quot;
+ [29] &quot;ENSG00000139725&quot; &quot;ENSG00000139718&quot; &quot;ENSG00000110801&quot; &quot;ENSG00000254585&quot;
+ [33] &quot;ENSG00000182636&quot; &quot;ENSG00000128739&quot; &quot;ENSG00000114062&quot; &quot;ENSG00000166206&quot;
+ [37] &quot;ENSG00000186297&quot; &quot;ENSG00000182256&quot; &quot;ENSG00000128731&quot; &quot;ENSG00000169926&quot;
+ [41] &quot;ENSG00000169918&quot; &quot;ENSG00000066933&quot; &quot;ENSG00000137817&quot; &quot;ENSG00000166233&quot;
+ [45] &quot;ENSG00000140463&quot; &quot;ENSG00000159322&quot; &quot;ENSG00000067141&quot; &quot;ENSG00000156642&quot;
+ [49] &quot;ENSG00000103855&quot; &quot;ENSG00000205363&quot; &quot;ENSG00000103485&quot; &quot;ENSG00000079616&quot;
+ [53] &quot;ENSG00000103495&quot; &quot;ENSG00000167371&quot; &quot;ENSG00000013364&quot; &quot;ENSG00000103502&quot;
+ [57] &quot;ENSG00000174938&quot; &quot;ENSG00000174939&quot; &quot;ENSG00000174943&quot; &quot;ENSG00000149932&quot;
+ [61] &quot;ENSG00000149930&quot; &quot;ENSG00000149929&quot; &quot;ENSG00000169592&quot; &quot;ENSG00000149927&quot;
+ [65] &quot;ENSG00000149926&quot; &quot;ENSG00000149925&quot; &quot;ENSG00000149923&quot; &quot;ENSG00000090238&quot;
+ [69] &quot;ENSG00000102882&quot; &quot;ENSG00000103154&quot; &quot;ENSG00000140943&quot; &quot;ENSG00000101190&quot;
+ [73] &quot;ENSG00000101191&quot; &quot;ENSG00000183628&quot; &quot;ENSG00000273032&quot; &quot;ENSG00000070413&quot;
+ [77] &quot;ENSG00000100075&quot; &quot;ENSG00000100084&quot; &quot;ENSG00000185608&quot; &quot;ENSG00000185838&quot;
+ [81] &quot;ENSG00000184470&quot; &quot;ENSG00000093010&quot; &quot;ENSG00000099889&quot; &quot;ENSG00000128191&quot;
+ [85] &quot;ENSG00000099899&quot; &quot;ENSG00000099901&quot; &quot;ENSG00000099904&quot; &quot;ENSG00000040608&quot;
+ [89] &quot;ENSG00000128185&quot; &quot;ENSG00000185252&quot; &quot;ENSG00000099910&quot; &quot;ENSG00000099917&quot;
+ [93] &quot;ENSG00000241973&quot; &quot;ENSG00000099940&quot; &quot;ENSG00000099942&quot; &quot;ENSG00000099949&quot;
+ [97] &quot;ENSG00000184436&quot; &quot;ENSG00000099957&quot; &quot;ENSG00000099960&quot; &quot;ENSG00000100241&quot;
+[101] &quot;ENSG00000100258&quot; &quot;ENSG00000025770&quot; &quot;ENSG00000025708&quot; &quot;ENSG00000100288&quot;
+[105] &quot;ENSG00000008735&quot; &quot;ENSG00000251322&quot;
+
+$ASD.DATABASE
+  [1] &quot;ENSG00000171735&quot; &quot;ENSG00000177000&quot; &quot;ENSG00000133216&quot; &quot;ENSG00000188786&quot;
+  [5] &quot;ENSG00000173406&quot; &quot;ENSG00000162599&quot; &quot;ENSG00000184588&quot; &quot;ENSG00000033122&quot;
+  [9] &quot;ENSG00000163393&quot; &quot;ENSG00000143379&quot; &quot;ENSG00000143442&quot; &quot;ENSG00000073756&quot;
+ [13] &quot;ENSG00000116141&quot; &quot;ENSG00000116984&quot; &quot;ENSG00000158089&quot; &quot;ENSG00000138095&quot;
+ [17] &quot;ENSG00000082898&quot; &quot;ENSG00000211460&quot; &quot;ENSG00000204406&quot; &quot;ENSG00000144278&quot;
+ [21] &quot;ENSG00000115159&quot; &quot;ENSG00000136535&quot; &quot;ENSG00000136531&quot; &quot;ENSG00000198648&quot;
+ [25] &quot;ENSG00000081479&quot; &quot;ENSG00000144355&quot; &quot;ENSG00000128654&quot; &quot;ENSG00000151689&quot;
+ [29] &quot;ENSG00000118257&quot; &quot;ENSG00000078018&quot; &quot;ENSG00000036257&quot; &quot;ENSG00000187957&quot;
+ [33] &quot;ENSG00000157985&quot; &quot;ENSG00000068024&quot; &quot;ENSG00000144619&quot; &quot;ENSG00000157087&quot;
+ [37] &quot;ENSG00000181555&quot; &quot;ENSG00000157388&quot; &quot;ENSG00000153266&quot; &quot;ENSG00000114861&quot;
+ [41] &quot;ENSG00000113805&quot; &quot;ENSG00000169855&quot; &quot;ENSG00000172020&quot; &quot;ENSG00000082701&quot;
+ [45] &quot;ENSG00000173175&quot; &quot;ENSG00000129071&quot; &quot;ENSG00000181744&quot; &quot;ENSG00000177565&quot;
+ [49] &quot;ENSG00000205981&quot; &quot;ENSG00000163872&quot; &quot;ENSG00000109158&quot; &quot;ENSG00000033178&quot;
+ [53] &quot;ENSG00000151247&quot; &quot;ENSG00000138650&quot; &quot;ENSG00000040731&quot; &quot;ENSG00000113100&quot;
+ [57] &quot;ENSG00000145740&quot; &quot;ENSG00000152413&quot; &quot;ENSG00000081189&quot; &quot;ENSG00000134982&quot;
+ [61] &quot;ENSG00000047188&quot; &quot;ENSG00000072364&quot; &quot;ENSG00000145979&quot; &quot;ENSG00000008083&quot;
+ [65] &quot;ENSG00000197283&quot; &quot;ENSG00000153291&quot; &quot;ENSG00000168116&quot; &quot;ENSG00000112232&quot;
+ [69] &quot;ENSG00000164418&quot; &quot;ENSG00000249853&quot; &quot;ENSG00000112357&quot; &quot;ENSG00000158321&quot;
+ [73] &quot;ENSG00000189056&quot; &quot;ENSG00000091136&quot; &quot;ENSG00000091129&quot; &quot;ENSG00000128573&quot;
+ [77] &quot;ENSG00000105976&quot; &quot;ENSG00000004866&quot; &quot;ENSG00000077063&quot; &quot;ENSG00000081803&quot;
+ [81] &quot;ENSG00000128609&quot; &quot;ENSG00000128513&quot; &quot;ENSG00000197157&quot; &quot;ENSG00000186591&quot;
+ [85] &quot;ENSG00000101849&quot; &quot;ENSG00000102078&quot; &quot;ENSG00000147316&quot; &quot;ENSG00000156011&quot;
+ [89] &quot;ENSG00000277586&quot; &quot;ENSG00000104517&quot; &quot;ENSG00000196730&quot; &quot;ENSG00000130707&quot;
+ [93] &quot;ENSG00000148408&quot; &quot;ENSG00000026508&quot; &quot;ENSG00000086205&quot; &quot;ENSG00000162105&quot;
+ [97] &quot;ENSG00000152402&quot; &quot;ENSG00000182985&quot; &quot;ENSG00000151150&quot; &quot;ENSG00000171988&quot;
+[101] &quot;ENSG00000165476&quot; &quot;ENSG00000148730&quot; &quot;ENSG00000156110&quot; &quot;ENSG00000107816&quot;
+[105] &quot;ENSG00000273079&quot; &quot;ENSG00000134532&quot; &quot;ENSG00000087470&quot; &quot;ENSG00000166987&quot;
+[109] &quot;ENSG00000171759&quot; &quot;ENSG00000183495&quot; &quot;ENSG00000102755&quot; &quot;ENSG00000172915&quot;
+[113] &quot;ENSG00000100888&quot; &quot;ENSG00000165379&quot; &quot;ENSG00000071246&quot; &quot;ENSG00000021645&quot;
+[117] &quot;ENSG00000012963&quot; &quot;ENSG00000114062&quot; &quot;ENSG00000166206&quot; &quot;ENSG00000128731&quot;
+[121] &quot;ENSG00000034053&quot; &quot;ENSG00000069667&quot; &quot;ENSG00000178718&quot; &quot;ENSG00000140538&quot;
+[125] &quot;ENSG00000196557&quot; &quot;ENSG00000103197&quot; &quot;ENSG00000183044&quot; &quot;ENSG00000186260&quot;
+[129] &quot;ENSG00000103528&quot; &quot;ENSG00000166847&quot; &quot;ENSG00000166501&quot; &quot;ENSG00000102882&quot;
+[133] &quot;ENSG00000103507&quot; &quot;ENSG00000150394&quot; &quot;ENSG00000153815&quot; &quot;ENSG00000103168&quot;
+[137] &quot;ENSG00000108953&quot; &quot;ENSG00000132535&quot; &quot;ENSG00000179094&quot; &quot;ENSG00000108557&quot;
+[141] &quot;ENSG00000196712&quot; &quot;ENSG00000131771&quot; &quot;ENSG00000006283&quot; &quot;ENSG00000146872&quot;
+[145] &quot;ENSG00000133195&quot; &quot;ENSG00000175866&quot; &quot;ENSG00000141644&quot; &quot;ENSG00000171791&quot;
+[149] &quot;ENSG00000172264&quot; &quot;ENSG00000149654&quot; &quot;ENSG00000101126&quot; &quot;ENSG00000071655&quot;
+[153] &quot;ENSG00000065989&quot; &quot;ENSG00000104936&quot; &quot;ENSG00000100030&quot; &quot;ENSG00000100346&quot;
+[157] &quot;ENSG00000239900&quot; &quot;ENSG00000100393&quot; &quot;ENSG00000008735&quot; &quot;ENSG00000251322&quot;
+[161] &quot;ENSG00000205581&quot; &quot;ENSG00000197381&quot;
+
+$BPAD.GWAS
+ [1] &quot;ENSG00000154027&quot; &quot;ENSG00000077254&quot; &quot;ENSG00000162613&quot; &quot;ENSG00000162616&quot;
+ [5] &quot;ENSG00000116147&quot; &quot;ENSG00000114988&quot; &quot;ENSG00000158158&quot; &quot;ENSG00000071073&quot;
+ [9] &quot;ENSG00000135951&quot; &quot;ENSG00000158411&quot; &quot;ENSG00000185414&quot; &quot;ENSG00000115514&quot;
+[13] &quot;ENSG00000158417&quot; &quot;ENSG00000135945&quot; &quot;ENSG00000198648&quot; &quot;ENSG00000023330&quot;
+[17] &quot;ENSG00000247596&quot; &quot;ENSG00000164088&quot; &quot;ENSG00000164091&quot; &quot;ENSG00000114841&quot;
+[21] &quot;ENSG00000163930&quot; &quot;ENSG00000010322&quot; &quot;ENSG00000010327&quot; &quot;ENSG00000168268&quot;
+[25] &quot;ENSG00000163939&quot; &quot;ENSG00000163938&quot; &quot;ENSG00000016864&quot; &quot;ENSG00000114902&quot;
+[29] &quot;ENSG00000114904&quot; &quot;ENSG00000163933&quot; &quot;ENSG00000163932&quot; &quot;ENSG00000157388&quot;
+[33] &quot;ENSG00000016391&quot; &quot;ENSG00000109339&quot; &quot;ENSG00000168843&quot; &quot;ENSG00000131018&quot;
+[37] &quot;ENSG00000002822&quot; &quot;ENSG00000106268&quot; &quot;ENSG00000175229&quot; &quot;ENSG00000087365&quot;
+[41] &quot;ENSG00000175115&quot; &quot;ENSG00000174996&quot; &quot;ENSG00000174903&quot; &quot;ENSG00000174871&quot;
+[45] &quot;ENSG00000174851&quot; &quot;ENSG00000179292&quot; &quot;ENSG00000174791&quot; &quot;ENSG00000174744&quot;
+[49] &quot;ENSG00000174669&quot; &quot;ENSG00000174547&quot; &quot;ENSG00000174516&quot; &quot;ENSG00000254986&quot;
+[53] &quot;ENSG00000174165&quot; &quot;ENSG00000173992&quot; &quot;ENSG00000239306&quot; &quot;ENSG00000173933&quot;
+[57] &quot;ENSG00000173914&quot; &quot;ENSG00000173898&quot; &quot;ENSG00000173653&quot; &quot;ENSG00000173599&quot;
+[61] &quot;ENSG00000173621&quot; &quot;ENSG00000173227&quot; &quot;ENSG00000151150&quot; &quot;ENSG00000108175&quot;
+[65] &quot;ENSG00000107957&quot; &quot;ENSG00000151067&quot; &quot;ENSG00000167535&quot; &quot;ENSG00000174243&quot;
+[69] &quot;ENSG00000172602&quot; &quot;ENSG00000181418&quot; &quot;ENSG00000181929&quot; &quot;ENSG00000139636&quot;
+[73] &quot;ENSG00000123416&quot; &quot;ENSG00000167552&quot; &quot;ENSG00000102780&quot; &quot;ENSG00000100505&quot;
+[77] &quot;ENSG00000166068&quot; &quot;ENSG00000196090&quot; &quot;ENSG00000008441&quot; &quot;ENSG00000130287&quot;
+[81] &quot;ENSG00000063177&quot; &quot;ENSG00000063176&quot; &quot;ENSG00000105516&quot; &quot;ENSG00000063180&quot;
+[85] &quot;ENSG00000105538&quot; &quot;ENSG00000174951&quot;
+
+$ID
+ [1] &quot;ENSG00000126091&quot; &quot;ENSG00000134262&quot; &quot;ENSG00000179915&quot; &quot;ENSG00000169554&quot;
+ [5] &quot;ENSG00000113851&quot; &quot;ENSG00000114861&quot; &quot;ENSG00000081189&quot; &quot;ENSG00000197283&quot;
+ [9] &quot;ENSG00000164418&quot; &quot;ENSG00000112320&quot; &quot;ENSG00000221838&quot; &quot;ENSG00000174469&quot;
+[13] &quot;ENSG00000004961&quot; &quot;ENSG00000046651&quot; &quot;ENSG00000182287&quot; &quot;ENSG00000008086&quot;
+[17] &quot;ENSG00000177189&quot; &quot;ENSG00000165186&quot; &quot;ENSG00000004848&quot; &quot;ENSG00000156298&quot;
+[21] &quot;ENSG00000183337&quot; &quot;ENSG00000182220&quot; &quot;ENSG00000147044&quot; &quot;ENSG00000008056&quot;
+[25] &quot;ENSG00000068438&quot; &quot;ENSG00000102103&quot; &quot;ENSG00000102003&quot; &quot;ENSG00000124313&quot;
+[29] &quot;ENSG00000072506&quot; &quot;ENSG00000086758&quot; &quot;ENSG00000172943&quot; &quot;ENSG00000131089&quot;
+[33] &quot;ENSG00000079482&quot; &quot;ENSG00000082458&quot; &quot;ENSG00000184634&quot; &quot;ENSG00000147100&quot;
+[37] &quot;ENSG00000085224&quot; &quot;ENSG00000102158&quot; &quot;ENSG00000147180&quot; &quot;ENSG00000165194&quot;
+[41] &quot;ENSG00000123560&quot; &quot;ENSG00000147224&quot; &quot;ENSG00000068366&quot; &quot;ENSG00000077264&quot;
+[45] &quot;ENSG00000077279&quot; &quot;ENSG00000077721&quot; &quot;ENSG00000125351&quot; &quot;ENSG00000158290&quot;
+[49] &quot;ENSG00000125675&quot; &quot;ENSG00000122126&quot; &quot;ENSG00000188706&quot; &quot;ENSG00000156531&quot;
+[53] &quot;ENSG00000198689&quot; &quot;ENSG00000129675&quot; &quot;ENSG00000102081&quot; &quot;ENSG00000155966&quot;
+[57] &quot;ENSG00000147383&quot; &quot;ENSG00000130821&quot; &quot;ENSG00000169057&quot; &quot;ENSG00000196924&quot;
+[61] &quot;ENSG00000203879&quot; &quot;ENSG00000155961&quot; &quot;ENSG00000104723&quot; &quot;ENSG00000147475&quot;
+[65] &quot;ENSG00000178538&quot; &quot;ENSG00000167632&quot; &quot;ENSG00000147852&quot; &quot;ENSG00000136854&quot;
+[69] &quot;ENSG00000177239&quot; &quot;ENSG00000176165&quot; &quot;ENSG00000100478&quot; &quot;ENSG00000100722&quot;
+[73] &quot;ENSG00000197102&quot; &quot;ENSG00000114062&quot; &quot;ENSG00000108557&quot; &quot;ENSG00000196628&quot;
+[77] &quot;ENSG00000132024&quot;
+
+$NDD
+ [1] &quot;ENSG00000117174&quot; &quot;ENSG00000021574&quot; &quot;ENSG00000204406&quot; &quot;ENSG00000170396&quot;
+ [5] &quot;ENSG00000119042&quot; &quot;ENSG00000114861&quot; &quot;ENSG00000181722&quot; &quot;ENSG00000152818&quot;
+ [9] &quot;ENSG00000112541&quot; &quot;ENSG00000158321&quot; &quot;ENSG00000165055&quot; &quot;ENSG00000008086&quot;
+[13] &quot;ENSG00000136861&quot; &quot;ENSG00000181090&quot; &quot;ENSG00000065809&quot; &quot;ENSG00000150093&quot;
+[17] &quot;ENSG00000151150&quot; &quot;ENSG00000273079&quot; &quot;ENSG00000134532&quot; &quot;ENSG00000100888&quot;
+[21] &quot;ENSG00000128739&quot; &quot;ENSG00000070366&quot; &quot;ENSG00000091592&quot; &quot;ENSG00000196628&quot;
+[25] &quot;ENSG00000125651&quot; &quot;ENSG00000168813&quot;
+
+$Neurodegenerative
+ [1] &quot;ENSG00000116288&quot; &quot;ENSG00000120948&quot; &quot;ENSG00000158828&quot; &quot;ENSG00000067208&quot;
+ [5] &quot;ENSG00000177628&quot; &quot;ENSG00000132698&quot; &quot;ENSG00000143801&quot; &quot;ENSG00000136717&quot;
+ [9] &quot;ENSG00000198648&quot; &quot;ENSG00000083937&quot; &quot;ENSG00000078070&quot; &quot;ENSG00000114867&quot;
+[13] &quot;ENSG00000178950&quot; &quot;ENSG00000197386&quot; &quot;ENSG00000145335&quot; &quot;ENSG00000198087&quot;
+[17] &quot;ENSG00000135541&quot; &quot;ENSG00000136235&quot; &quot;ENSG00000188021&quot; &quot;ENSG00000120885&quot;
+[21] &quot;ENSG00000147894&quot; &quot;ENSG00000073921&quot; &quot;ENSG00000123240&quot; &quot;ENSG00000188906&quot;
+[25] &quot;ENSG00000080815&quot; &quot;ENSG00000038532&quot; &quot;ENSG00000099381&quot; &quot;ENSG00000089280&quot;
+[29] &quot;ENSG00000069329&quot; &quot;ENSG00000030582&quot; &quot;ENSG00000186868&quot; &quot;ENSG00000124164&quot;
+[33] &quot;ENSG00000064687&quot; &quot;ENSG00000130203&quot; &quot;ENSG00000142192&quot; &quot;ENSG00000142168&quot;</code></pre>
+<p>We combine all gene lists and store the object.</p>
+<pre class="r"><code>cell_types &lt;- c(cell_types, asd_sfari_geneList,cell_types_birnbaum)
+saveRDS(cell_types, file=file.path(&quot;_processed_data&quot;,
+                                 &quot;cell_types.human_dlpfc.rds&quot;))</code></pre>
+</div>
+<div id="session-information" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Session information</h1>
+<pre class="r"><code>sessionInfo()
+R version 4.4.0 (2024-04-24)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 22.04.3 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=ca_ES.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=ca_ES.UTF-8        LC_COLLATE=ca_ES.UTF-8    
+ [5] LC_MONETARY=ca_ES.UTF-8    LC_MESSAGES=ca_ES.UTF-8   
+ [7] LC_PAPER=ca_ES.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=ca_ES.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/Madrid
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] RColorBrewer_1.1-3          scater_1.32.0              
+ [3] scran_1.32.0                patchwork_1.2.0            
+ [5] ggspavis_1.10.0             ggplot2_3.5.1              
+ [7] scuttle_1.14.0              spatialLIBD_1.16.2         
+ [9] SpatialExperiment_1.14.0    SingleCellExperiment_1.26.0
+[11] SummarizedExperiment_1.34.0 Biobase_2.64.0             
+[13] GenomicRanges_1.56.0        GenomeInfoDb_1.40.1        
+[15] IRanges_2.38.0              S4Vectors_0.42.0           
+[17] MatrixGenerics_1.16.0       matrixStats_1.3.0          
+[19] ExperimentHub_2.12.0        AnnotationHub_3.12.0       
+[21] BiocFileCache_2.12.0        dbplyr_2.5.0               
+[23] BiocGenerics_0.50.0         kableExtra_1.4.0           
+[25] knitr_1.47                  BiocStyle_2.32.0           
+
+loaded via a namespace (and not attached):
+  [1] later_1.3.2               BiocIO_1.14.0            
+  [3] bitops_1.0-7              filelock_1.0.3           
+  [5] fields_15.2               tibble_3.2.1             
+  [7] XML_3.99-0.16.1           lifecycle_1.0.4          
+  [9] edgeR_4.2.0               doParallel_1.0.17        
+ [11] lattice_0.20-45           magrittr_2.0.3           
+ [13] limma_3.60.2              plotly_4.10.4            
+ [15] sass_0.4.9                rmarkdown_2.27           
+ [17] jquerylib_0.1.4           yaml_2.3.8               
+ [19] metapod_1.12.0            httpuv_1.6.15            
+ [21] ggside_0.3.1              spam_2.10-0              
+ [23] sessioninfo_1.2.2         cowplot_1.1.3            
+ [25] DBI_1.2.2                 golem_0.4.1              
+ [27] maps_3.4.2                abind_1.4-5              
+ [29] zlibbioc_1.50.0           purrr_1.0.2              
+ [31] RCurl_1.98-1.14           rappdirs_0.3.3           
+ [33] GenomeInfoDbData_1.2.12   ggrepel_0.9.5            
+ [35] irlba_2.3.5.1             dqrng_0.4.1              
+ [37] svglite_2.1.3             DelayedMatrixStats_1.26.0
+ [39] codetools_0.2-18          DelayedArray_0.30.1      
+ [41] DT_0.33                   xml2_1.3.6               
+ [43] tidyselect_1.2.1          farver_2.1.2             
+ [45] UCSC.utils_1.0.0          ScaledMatrix_1.12.0      
+ [47] viridis_0.6.5             shinyWidgets_0.8.6       
+ [49] GenomicAlignments_1.40.0  jsonlite_1.8.8           
+ [51] BiocNeighbors_1.22.0      iterators_1.0.14         
+ [53] systemfonts_1.1.0         foreach_1.5.2            
+ [55] tools_4.4.0               Rcpp_1.0.12              
+ [57] glue_1.7.0                gridExtra_2.3            
+ [59] SparseArray_1.4.8         xfun_0.44                
+ [61] dplyr_1.1.4               withr_3.0.0              
+ [63] BiocManager_1.30.23       fastmap_1.2.0            
+ [65] bluster_1.14.0            fansi_1.0.6              
+ [67] digest_0.6.35             rsvd_1.0.5               
+ [69] R6_2.5.1                  mime_0.12                
+ [71] colorspace_2.1-0          RSQLite_2.3.7            
+ [73] config_0.3.2              utf8_1.2.4               
+ [75] tidyr_1.3.1               generics_0.1.3           
+ [77] data.table_1.15.4         rtracklayer_1.64.0       
+ [79] httr_1.4.7                htmlwidgets_1.6.4        
+ [81] S4Arrays_1.4.1            pkgconfig_2.0.3          
+ [83] gtable_0.3.5              blob_1.2.4               
+ [85] XVector_0.44.0            htmltools_0.5.8.1        
+ [87] dotCall64_1.1-1           bookdown_0.39            
+ [89] scales_1.3.0              png_0.1-8                
+ [91] attempt_0.3.1             rstudioapi_0.16.0        
+ [93] rjson_0.2.21              curl_5.2.1               
+ [95] cachem_1.1.0              stringr_1.5.1            
+ [97] BiocVersion_3.19.1        parallel_4.4.0           
+ [99] vipor_0.4.7               AnnotationDbi_1.66.0     
+[101] restfulr_0.0.15           pillar_1.9.0             
+[103] grid_4.4.0                vctrs_0.6.5              
+[105] promises_1.3.0            BiocSingular_1.20.0      
+[107] beachmat_2.20.0           cluster_2.1.2            
+[109] xtable_1.8-4              beeswarm_0.4.0           
+[111] paletteer_1.6.0           evaluate_0.23            
+[113] tinytex_0.51              magick_2.8.3             
+[115] cli_3.6.2                 locfit_1.5-9.9           
+[117] compiler_4.4.0            Rsamtools_2.20.0         
+[119] rlang_1.1.3               crayon_1.5.2             
+[121] labeling_0.4.3            rematch2_2.1.2           
+[123] ggbeeswarm_0.7.2          stringi_1.8.4            
+[125] viridisLite_0.4.2         BiocParallel_1.38.0      
+[127] munsell_0.5.1             Biostrings_2.72.0        
+[129] lazyeval_0.2.2            Matrix_1.7-0             
+[131] benchmarkme_1.0.8         sparseMatrixStats_1.16.0 
+[133] bit64_4.0.5               KEGGREST_1.44.0          
+[135] statmod_1.5.0             shiny_1.8.1.1            
+[137] highr_0.11                igraph_2.0.3             
+[139] memoise_2.0.1             bslib_0.7.0              
+[141] benchmarkmeData_1.0.4     bit_4.0.5                </code></pre>
+</div>
+<div id="references" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> References</h1>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": {
+      styles: {
+        ".MathJax_Display": {
+           "text-align": "center",
+           padding: "0px 150px 0px 65px",
+           margin: "0px 0px 0.5em"
+        },
+        "@media screen and (max-width: 991px)": {
+            ".MathJax_Display": {
+               "text-align": "center",
+               padding: "0 0 0 0"
+            }
+         }
+      }
+    }
+  });
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<script type="text/javascript">
+$(document).ready(function ()  {
+  
+  // Map "enter" keypress to the same action as a cursor click
+  function navigateLink(e) {
+    if (e.key === "Enter") {
+      $(this).trigger("click");
+    }
+  }
+
+  var toc_items = document.querySelectorAll(".tocify-item");
+  for (var i = 0; i < toc_items.length; i++) {
+    // The link role tells screen readers this is for navigation
+    toc_items.item(i).setAttribute("role", "link");
+    // tabindex = 0 allows selection via keyboard tab presses
+    toc_items.item(i).setAttribute("tabindex", "0");
+    // Listen for "Enter" keypress when item is selected
+    toc_items.item(i).addEventListener("keydown", navigateLink);
+  }
+});
+</script>
+
+</body>
+</html>
