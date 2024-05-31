@@ -3,8 +3,8 @@ title: Quality assessment and processing of human DLPFC data
 author: 
 - name: Pere Moles
   affiliation:
-  - &id Dept. of Medicine and Life Sciences, Universitat Pompeu Fabra
-  email: pere.moles@upf.edu
+  - MSc Data Science student, Universitat Oberta de Catalunya
+  email: pere.moles@uoc.edu
 date: "`r format(Sys.time(), '%B %e, %Y')`"
 abstract: >
   Here we perform a first exploratory analysis and quality assessment of the 10x Visium human dorsolateral pre-frontal cortex (DLPFC) data, and process it for its downstream analysis.

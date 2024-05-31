@@ -1,10 +1,10 @@
 ---
-title: GSVA analysis mouse brain data
+title: Quality assessment and processing of mouse brain data
 author: 
 - name: Pere Moles
   affiliation:
-  - &id Dept. of Medicine and Life Sciences, Universitat Pompeu Fabra
-  email: pere.moles@upf.edu
+  - &id MSc Data Science student, Universitat Oberta de Catalunya
+  email: pere.moles@uoc.edu
 date: "`r format(Sys.time(), '%B %e, %Y')`"
 abstract: >
   Here we perform a GSVA analysis of the 10x Visium mouse brain data.

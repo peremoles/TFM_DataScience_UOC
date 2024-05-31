@@ -360,9 +360,9 @@ function toggle_visibility(id1) {
 
 <h1 class="title toc-ignore">GSVA analysis mouse brain data</h1>
 <p class="author-name">Pere Moles<span class="affil-mark">1*</span></p>
-<p class="author-affiliation"><span class="affil-mark">1</span>Dept. of Medicine and Life Sciences, Universitat Pompeu Fabra</p>
-<p class="author-email"><span class="affil-mark">*</span><a href="mailto:pere.moles@upf.edu">pere.moles@upf.edu</a></p>
-<h4 class="date">de maig 31, 2024</h4>
+<p class="author-affiliation"><span class="affil-mark">1</span>MSc Data Science student, Universitat Oberta de Catalunya</p>
+<p class="author-email"><span class="affil-mark">*</span><a href="mailto:pere.moles@uoc.edu">pere.moles@uoc.edu</a></p>
+<h4 class="date">de juny 1, 2024</h4>
 <h4 class="abstract">Abstract</h4>
 <p>Here we perform a GSVA analysis of the mouse brain data.</p>
 
@@ -404,11 +404,7 @@ length(top_hvgs)
 [1] 597</code></pre>
 <p>Calculate PCA.</p>
 <pre class="r"><code>library(scater)
-
-S&#39;està adjuntant el paquet: &#39;scater&#39;
-L&#39;objecte següent està emmascarat per &#39;package:limma&#39;:
-
-    plotMDS</code></pre>
+S&#39;està carregant el paquet requerit: ggplot2</code></pre>
 <pre class="r"><code>
 set.seed(123)
 spe.filt &lt;- runPCA(spe.filt, subset_row=top_hvgs)
@@ -1260,62 +1256,61 @@ attached base packages:
 [8] base     
 
 other attached packages:
- [1] scater_1.32.0                  scran_1.32.0                  
- [3] scuttle_1.14.0                 RColorBrewer_1.1-3            
- [5] patchwork_1.2.0                ggspavis_1.10.0               
- [7] ggplot2_3.5.1                  limma_3.60.2                  
- [9] Voyager_1.6.0                  SpatialFeatureExperiment_1.6.1
-[11] BiocParallel_1.38.0            GSVA_1.52.2                   
-[13] dplyr_1.1.4                    openxlsx_4.2.5.2              
-[15] SpatialExperiment_1.14.0       SingleCellExperiment_1.26.0   
-[17] SummarizedExperiment_1.34.0    Biobase_2.64.0                
-[19] GenomicRanges_1.56.0           GenomeInfoDb_1.40.1           
-[21] IRanges_2.38.0                 S4Vectors_0.42.0              
-[23] BiocGenerics_0.50.0            MatrixGenerics_1.16.0         
-[25] matrixStats_1.3.0              kableExtra_1.4.0              
-[27] knitr_1.47                     BiocStyle_2.32.0              
+ [1] limma_3.60.2                   Voyager_1.6.0                 
+ [3] SpatialFeatureExperiment_1.6.1 BiocParallel_1.38.0           
+ [5] GSVA_1.52.2                    ggspavis_1.10.0               
+ [7] patchwork_1.2.0                RColorBrewer_1.1-3            
+ [9] scater_1.32.0                  ggplot2_3.5.1                 
+[11] scran_1.32.0                   scuttle_1.14.0                
+[13] SpatialExperiment_1.14.0       SingleCellExperiment_1.26.0   
+[15] SummarizedExperiment_1.34.0    Biobase_2.64.0                
+[17] GenomicRanges_1.56.0           GenomeInfoDb_1.40.1           
+[19] IRanges_2.38.0                 S4Vectors_0.42.0              
+[21] BiocGenerics_0.50.0            MatrixGenerics_1.16.0         
+[23] matrixStats_1.3.0              kableExtra_1.4.0              
+[25] knitr_1.47                     BiocStyle_2.32.0              
 
 loaded via a namespace (and not attached):
   [1] bitops_1.0-7              tibble_3.2.1             
   [3] R.oo_1.26.0               graph_1.82.0             
   [5] XML_3.99-0.16.1           lifecycle_1.0.4          
   [7] sf_1.0-16                 edgeR_4.2.0              
-  [9] lattice_0.20-45           magrittr_2.0.3           
+  [9] lattice_0.22-6            magrittr_2.0.3           
  [11] sass_0.4.9                rmarkdown_2.27           
  [13] jquerylib_0.1.4           yaml_2.3.8               
- [15] metapod_1.12.0            zip_2.3.1                
- [17] ggside_0.3.1              sp_2.1-4                 
- [19] DBI_1.2.2                 abind_1.4-5              
- [21] zlibbioc_1.50.0           R.utils_2.12.3           
- [23] RCurl_1.98-1.14           GenomeInfoDbData_1.2.12  
- [25] ggrepel_0.9.5             irlba_2.3.5.1            
- [27] terra_1.7-78              units_0.8-5              
- [29] RSpectra_0.16-1           annotate_1.82.0          
- [31] dqrng_0.4.1               svglite_2.1.3            
- [33] DelayedMatrixStats_1.26.0 codetools_0.2-18         
- [35] DropletUtils_1.24.0       DelayedArray_0.30.1      
- [37] xml2_1.3.6                tidyselect_1.2.1         
- [39] farver_2.1.2              UCSC.utils_1.0.0         
- [41] memuse_4.2-3              viridis_0.6.5            
- [43] ScaledMatrix_1.12.0       jsonlite_1.8.8           
- [45] BiocNeighbors_1.22.0      e1071_1.7-14             
- [47] systemfonts_1.1.0         tools_4.4.0              
- [49] ggnewscale_0.4.10         Rcpp_1.0.12              
- [51] glue_1.7.0                gridExtra_2.3            
- [53] SparseArray_1.4.8         xfun_0.44                
- [55] EBImage_4.46.0            HDF5Array_1.32.0         
+ [15] metapod_1.12.0            ggside_0.3.1             
+ [17] sp_2.1-4                  DBI_1.2.2                
+ [19] abind_1.4-5               zlibbioc_1.50.0          
+ [21] R.utils_2.12.3            RCurl_1.98-1.14          
+ [23] GenomeInfoDbData_1.2.12   ggrepel_0.9.5            
+ [25] irlba_2.3.5.1             terra_1.7-78             
+ [27] units_0.8-5               RSpectra_0.16-1          
+ [29] annotate_1.82.0           dqrng_0.4.1              
+ [31] svglite_2.1.3             DelayedMatrixStats_1.26.0
+ [33] codetools_0.2-20          DropletUtils_1.24.0      
+ [35] DelayedArray_0.30.1       xml2_1.3.6               
+ [37] tidyselect_1.2.1          memuse_4.2-3             
+ [39] UCSC.utils_1.0.0          farver_2.1.2             
+ [41] ScaledMatrix_1.12.0       viridis_0.6.5            
+ [43] jsonlite_1.8.8            BiocNeighbors_1.22.0     
+ [45] e1071_1.7-14              systemfonts_1.1.0        
+ [47] ggnewscale_0.4.10         tools_4.4.0              
+ [49] Rcpp_1.0.12               glue_1.7.0               
+ [51] gridExtra_2.3             SparseArray_1.4.8        
+ [53] xfun_0.44                 EBImage_4.46.0           
+ [55] dplyr_1.1.4               HDF5Array_1.32.0         
  [57] withr_3.0.0               BiocManager_1.30.23      
- [59] fastmap_1.2.0             boot_1.3-28              
+ [59] fastmap_1.2.0             boot_1.3-30              
  [61] rhdf5filters_1.16.0       bluster_1.14.0           
- [63] fansi_1.0.6               spData_2.3.0             
+ [63] fansi_1.0.6               spData_2.3.1             
  [65] digest_0.6.35             rsvd_1.0.5               
- [67] R6_2.5.1                  colorspace_2.1-0         
- [69] wk_0.9.1                  jpeg_0.1-10              
+ [67] R6_2.5.1                  wk_0.9.1                 
+ [69] colorspace_2.1-0          jpeg_0.1-10              
  [71] RSQLite_2.3.7             R.methodsS3_1.8.2        
  [73] utf8_1.2.4                generics_0.1.3           
- [75] data.table_1.15.4         class_7.3-20             
+ [75] data.table_1.15.4         class_7.3-22             
  [77] httr_1.4.7                htmlwidgets_1.6.4        
- [79] S4Arrays_1.4.1            spdep_1.3-3              
+ [79] S4Arrays_1.4.1            spdep_1.3-4              
  [81] pkgconfig_2.0.3           scico_1.5.0              
  [83] gtable_0.3.5              blob_1.2.4               
  [85] XVector_0.44.0            htmltools_0.5.8.1        
@@ -1324,15 +1319,15 @@ loaded via a namespace (and not attached):
  [91] png_0.1-8                 rstudioapi_0.16.0        
  [93] rjson_0.2.21              proxy_0.4-27             
  [95] cachem_1.1.0              rhdf5_2.48.0             
- [97] stringr_1.5.1             KernSmooth_2.23-20       
+ [97] stringr_1.5.1             KernSmooth_2.23-24       
  [99] parallel_4.4.0            vipor_0.4.7              
 [101] AnnotationDbi_1.66.0      s2_1.1.6                 
 [103] pillar_1.9.0              grid_4.4.0               
 [105] vctrs_0.6.5               BiocSingular_1.20.0      
 [107] beachmat_2.20.0           xtable_1.8-4             
-[109] sfheaders_0.4.4           cluster_2.1.2            
+[109] sfheaders_0.4.4           cluster_2.1.6            
 [111] beeswarm_0.4.0            evaluate_0.23            
-[113] tinytex_0.51              zeallot_0.1.0            
+[113] zeallot_0.1.0             tinytex_0.51             
 [115] magick_2.8.3              cli_3.6.2                
 [117] locfit_1.5-9.9            compiler_4.4.0           
 [119] rlang_1.1.3               crayon_1.5.2             
