@@ -1,6 +1,0 @@
----
-title: "GSVA analysis of spatial transcriptomics data"
----
-
-This is the supporting website for the GSVA analysis of spatial
-transcriptomics data.
