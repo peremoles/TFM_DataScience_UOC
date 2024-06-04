@@ -487,7 +487,7 @@ LIBD = SpatialPCA_buildKernel(LIBD, kerneltype=&quot;gaussian&quot;, bandwidthty
 end_time &lt;- Sys.time()
 T = end_time - start_time
 T
-Time difference of 2.397296 mins</code></pre>
+Time difference of 2.098107 mins</code></pre>
 <pre class="r"><code>clusterlabel= walktrap_clustering(clusternum=7,latent_dat=LIBD@SpatialPCs,knearest=70 ) 
 # for other Visium or ST data, the user can also set k nearest number as round(sqrt(dim(SpatialPCAobject@SpatialPCs)[2])) by default.
 clusterlabel_refine = refine_cluster_10x(clusterlabels=clusterlabel,location=LIBD@location,shape=&quot;hexagon&quot;)</code></pre>
@@ -528,17 +528,59 @@ imgData names(4): sample_id image_id data scaleFactor</code></pre>
 <h1><span class="header-section-number">4</span> Spatially Variable Gene Sets</h1>
 <pre class="r"><code>library(nnSVG)
 
-#system.time(spe.nnsvg &lt;- nnSVG(spe.filt[top_hvgs,], assay_name = &quot;logcounts&quot;, BPPARAM=MulticoreParam(workers=4)))
-system.time(spe.nnsvg.es &lt;-nnSVG(spe.filt.es, assay_name = &quot;es&quot;, BPPARAM=MulticoreParam(workers=4)))
+system.time(spe.nnsvg &lt;- nnSVG(spe.filt[top_hvgs,], assay_name = &quot;logcounts&quot;, BPPARAM=MulticoreParam(workers=5)))
        usuari       sistema transcorregut 
-      137.274       141.534        50.846 </code></pre>
+     2931.100      4073.542      1001.523 </code></pre>
+<pre class="r"><code>system.time(spe.nnsvg.es &lt;-nnSVG(spe.filt.es, assay_name = &quot;es&quot;, BPPARAM=MulticoreParam(workers=4)))
+       usuari       sistema transcorregut 
+      203.465       294.224        76.814 </code></pre>
 <pre class="r"><code># number of significant SV Genes and Gene Sets
-#table(rowData(spe.nnsvg)$padj &lt;= 0.05)
-table(rowData(spe.nnsvg.es)$padj &lt;= 0.05)
+table(rowData(spe.nnsvg)$padj &lt;= 0.05)
 
 FALSE  TRUE 
-    4    46 </code></pre>
-<pre class="r"><code>#rowData(spe.nnsvg)[order(rowData(spe.nnsvg)$rank)[1:10], ]</code></pre>
+   92   739 </code></pre>
+<pre class="r"><code>table(rowData(spe.nnsvg.es)$padj &lt;= 0.05)
+
+FALSE  TRUE 
+    3    47 </code></pre>
+<pre class="r"><code>
+rowData(spe.nnsvg)[order(rowData(spe.nnsvg)$rank)[1:5], ]
+DataFrame with 5 rows and 23 columns
+                        source     type         gene_id gene_version
+                      &lt;factor&gt; &lt;factor&gt;     &lt;character&gt;  &lt;character&gt;
+ENSG00000197971 ensembl_havana     gene ENSG00000197971           14
+ENSG00000123560 ensembl_havana     gene ENSG00000123560           13
+ENSG00000198804 insdc              gene ENSG00000198804            2
+ENSG00000110484 ensembl_havana     gene ENSG00000110484            6
+ENSG00000131095 ensembl_havana     gene ENSG00000131095           12
+                  gene_name    gene_source   gene_biotype
+                &lt;character&gt;    &lt;character&gt;    &lt;character&gt;
+ENSG00000197971         MBP ensembl_havana protein_coding
+ENSG00000123560        PLP1 ensembl_havana protein_coding
+ENSG00000198804      MT-CO1          insdc protein_coding
+ENSG00000110484     SCGB2A2 ensembl_havana protein_coding
+ENSG00000131095        GFAP ensembl_havana protein_coding
+                           gene_search is_top_hvg   sigma.sq    tau.sq
+                           &lt;character&gt;  &lt;logical&gt;  &lt;numeric&gt; &lt;numeric&gt;
+ENSG00000197971   MBP; ENSG00000197971       TRUE  1.4700626  0.387177
+ENSG00000123560  PLP1; ENSG00000123560       TRUE  1.0063715  0.623055
+ENSG00000198804 MT-CO1; ENSG00000198..       TRUE  0.0937191  0.053727
+ENSG00000110484 SCGB2A2; ENSG0000011..       TRUE 18.1109288  0.365768
+ENSG00000131095  GFAP; ENSG00000131095       TRUE  0.7006729  0.519666
+                      phi    loglik   runtime      mean       var     spcov
+                &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+ENSG00000197971   1.35424 -3671.416     3.251   3.53333  2.482468 0.3431501
+ENSG00000123560  10.48222 -4741.616     3.712   2.58666  2.896605 0.3878288
+ENSG00000198804  11.17711  -385.219     1.329   7.02010  0.226935 0.0436085
+ENSG00000110484   1.53764 -4588.685     3.406   1.86094  2.338538 2.2868556
+ENSG00000131095  16.58370 -4500.583     1.730   1.85011  2.060159 0.4524400
+                  prop_sv loglik_lm   LR_stat      rank      pval      padj
+                &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+ENSG00000197971  0.791531  -6727.47   6112.11         1         0         0
+ENSG00000123560  0.617623  -7004.49   4525.75         2         0         0
+ENSG00000198804  0.635616  -2432.02   4093.59         3         0         0
+ENSG00000110484  0.980204  -6620.23   4063.09         4         0         0
+ENSG00000131095  0.574162  -6392.67   3784.17         5         0         0</code></pre>
 <pre class="r"><code>rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[1:10], ]
 DataFrame with 10 rows and 15 columns
                                                                                  gs
@@ -553,42 +595,42 @@ Lake.et.al.Science.Ex1          ENSG00000115756,ENSG00000135919,ENSG00000113100,
 Oligodendrocyte.progenitor.cell ENSG00000132692,ENSG00000144230,ENSG00000134853,...
 Neuron                          ENSG00000020129,ENSG00000162409,ENSG00000117569,...
 Gene_SFARI_all                  ENSG00000183044,ENSG00000064687,ENSG00000087085,...
-                                   sigma.sq      tau.sq       phi    loglik
-                                  &lt;numeric&gt;   &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
-Mature.oligodendrocyte          0.069855181 0.022131732   3.72116   1338.80
-Oligodendrocyte                 0.004698481 0.001845184   2.98630   5879.77
-Microglial.cell                 0.002317252 0.001234686  37.03135   5771.76
-Mid.radical.glial.cell          0.004174058 0.004548684  25.62809   4004.84
-Astrocyte                       0.002600282 0.002784953  19.79888   4959.55
-Glial.cell                      0.014520083 0.024979036  11.15414   1242.36
-Lake.et.al.Science.Ex1          0.006744862 0.012648355   5.78781   2535.58
-Oligodendrocyte.progenitor.cell 0.008795706 0.020182902   2.64254   1744.33
-Neuron                          0.000958350 0.001942713  23.07763   5747.60
-Gene_SFARI_all                  0.000225062 0.000541505  15.62419   8132.64
+                                   sigma.sq      tau.sq         phi    loglik
+                                  &lt;numeric&gt;   &lt;numeric&gt;   &lt;numeric&gt; &lt;numeric&gt;
+Mature.oligodendrocyte          0.051760089 0.020496709  8.25637981   1319.18
+Oligodendrocyte                 0.018177771 0.001817777  1.00000000   5856.86
+Microglial.cell                 0.002211274 0.001377564 32.18139858   5767.56
+Mid.radical.glial.cell          0.004124360 0.004480564 27.96337498   4001.28
+Astrocyte                       0.002643844 0.002617861 25.24216947   4964.10
+Glial.cell                      0.015332265 0.025606447  7.21814535   1240.54
+Lake.et.al.Science.Ex1          0.006647546 0.012231093 11.53036223   2530.57
+Oligodendrocyte.progenitor.cell 0.008961859 0.020472383  0.00202358   1745.73
+Neuron                          0.001132983 0.001731306 38.76953385   5742.74
+Gene_SFARI_all                  0.000229339 0.000541473 14.68968087   8137.07
                                   runtime      mean       var     spcov
                                 &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
-Mature.oligodendrocyte              1.906        NA        NA        NA
-Oligodendrocyte                     1.929        NA        NA        NA
-Microglial.cell                     3.557        NA        NA        NA
-Mid.radical.glial.cell              3.412        NA        NA        NA
-Astrocyte                           3.500        NA        NA        NA
-Glial.cell                          3.123        NA        NA        NA
-Lake.et.al.Science.Ex1              1.040        NA        NA        NA
-Oligodendrocyte.progenitor.cell     2.469        NA        NA        NA
-Neuron                              3.986        NA        NA        NA
-Gene_SFARI_all                      1.918        NA        NA        NA
+Mature.oligodendrocyte              5.491        NA        NA        NA
+Oligodendrocyte                     1.154        NA        NA        NA
+Microglial.cell                     3.907        NA        NA        NA
+Mid.radical.glial.cell              5.590        NA        NA        NA
+Astrocyte                           4.472        NA        NA        NA
+Glial.cell                          4.963        NA        NA        NA
+Lake.et.al.Science.Ex1              1.616        NA        NA        NA
+Oligodendrocyte.progenitor.cell     5.955        NA        NA        NA
+Neuron                              6.147        NA        NA        NA
+Gene_SFARI_all                      2.962        NA        NA        NA
                                   prop_sv loglik_lm   LR_stat      rank
                                 &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
-Mature.oligodendrocyte           0.759403 -2111.052   6899.70         1
-Oligodendrocyte                  0.718020  2962.735   5834.08         2
-Microglial.cell                  0.652391  4278.861   2985.80         3
-Mid.radical.glial.cell           0.478526  2866.222   2277.24         4
-Astrocyte                        0.482854  3878.357   2162.39         5
-Glial.cell                       0.367605   343.234   1798.26         6
-Lake.et.al.Science.Ex1           0.347795  1802.148   1466.86         7
-Oligodendrocyte.progenitor.cell  0.303524  1070.772   1347.13         8
-Neuron                           0.330344  5126.095   1243.01         9
-Gene_SFARI_all                   0.293597  7565.368   1134.54        10
+Mature.oligodendrocyte           0.716335 -2111.052   6860.47         1
+Oligodendrocyte                  0.909091  2962.735   5788.25         2
+Microglial.cell                  0.616153  4278.861   2977.40         3
+Mid.radical.glial.cell           0.479302  2866.222   2270.12         4
+Astrocyte                        0.502469  3878.357   2171.48         5
+Glial.cell                       0.374518   343.234   1794.61         6
+Lake.et.al.Science.Ex1           0.352120  1802.148   1456.85         7
+Oligodendrocyte.progenitor.cell  0.304471  1070.772   1349.91         8
+Neuron                           0.395555  5126.095   1233.30         9
+Gene_SFARI_all                   0.297529  7565.368   1143.41        10
                                      pval      padj
                                 &lt;numeric&gt; &lt;numeric&gt;
 Mature.oligodendrocyte                  0         0
@@ -609,38 +651,34 @@ for(j in 1:4){
   svgset &lt;- rownames(rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[j], ])
 
   print(paste(&quot;Length of the gene set&quot;,svgset,length(gs),&quot;genes&quot;))
-  gs &lt;- gs[1:min(8,length(gs))]
-  
- # df &lt;- sapply(gs, function(g){
-  #  stat &lt;- rowData(spe.nnsvg)[rowData(spe.nnsvg)$gene_id == g, ]
-   # stat
-  #})
-  #df &lt;- do.call(rbind, df)
-  #print(head(df))
-  plts &lt;- list()
+  svgs &lt;- rowData(spe.nnsvg)[gs,]
+  svgs &lt;- svgs[order(svgs$rank),][1:5,]
   i&lt;-1
-  for (g in gs) {
+  plts &lt;- list()
+  for (g in rownames(svgs)) {
     plts[[svgset]] &lt;- plotVisium(spe.filt.es, x_coord=&quot;pxl_col_in_fullres&quot;,
-                             y_coord=&quot;pxl_row_in_fullres&quot;, point_size=0.75,
+                             y_coord=&quot;pxl_row_in_fullres&quot;, point_size=0.5,
                              assay=&quot;es&quot;, annotate=svgset, facets=NULL) +
                         ggtitle(svgset) + theme(plot.title=element_text(hjust=0.5)) +
                         theme(legend.title=element_blank()) + labs(tag=letters[i])
     plts[[g]] &lt;- plotVisium(spe.filt, x_coord=&quot;pxl_col_in_fullres&quot;,
-                             y_coord=&quot;pxl_row_in_fullres&quot;, point_size=0.75,
+                             y_coord=&quot;pxl_row_in_fullres&quot;, point_size=0.5,
                              assay=&quot;logcounts&quot;, annotate=g, facets=NULL) +
                         ggtitle(g) + theme(plot.title=element_text(hjust=0.5)) +
                         theme(legend.title=element_blank()) + labs(tag=letters[i])
     i &lt;- i + 1
   }
-  wrap_plots(plts, nrow=ceiling(length(plts)/2))
+  show(wrap_plots(plts, nrow=ceiling(length(plts)/2)))
 }
-[1] &quot;Length of the gene set Mature.oligodendrocyte 5 genes&quot;
-[1] &quot;Length of the gene set Oligodendrocyte 165 genes&quot;
-[1] &quot;Length of the gene set Microglial.cell 250 genes&quot;
-[1] &quot;Length of the gene set Mid.radical.glial.cell 20 genes&quot;</code></pre>
-</div>
-<div id="morans-i-estimation" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> Moran’s I estimation</h1>
+[1] &quot;Length of the gene set Mature.oligodendrocyte 5 genes&quot;</code></pre>
+<p><img src="04_gsva_hdlpfc_files/figure-html/unnamed-chunk-15-1.png" width="100%"  class="widefigure" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Length of the gene set Oligodendrocyte 165 genes&quot;</code></pre>
+<p><img src="04_gsva_hdlpfc_files/figure-html/unnamed-chunk-15-2.png" width="100%"  class="widefigure" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Length of the gene set Microglial.cell 250 genes&quot;</code></pre>
+<p><img src="04_gsva_hdlpfc_files/figure-html/unnamed-chunk-15-3.png" width="100%"  class="widefigure" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Length of the gene set Mid.radical.glial.cell 20 genes&quot;</code></pre>
+<p><img src="04_gsva_hdlpfc_files/figure-html/unnamed-chunk-15-4.png" width="100%"  class="widefigure" style="display: block; margin: auto;" />
+# Moran’s I estimation</p>
 <p>Here we calculate Moran’s I for each gene set in the GSVA
 enrichment scores (ES) calculated with default parameters.</p>
 <pre class="r"><code>library(SpatialFeatureExperiment)
@@ -656,8 +694,8 @@ moransi &lt;- rowData(runUnivariate(sfe, type=&quot;moran.mc&quot;, nsim = 1000,
                                  exprs_values=&quot;es&quot;, zero.policy=TRUE))
 moransi &lt;- moransi[, c(2,4)]
 colnames(moransi) &lt;- c(&quot;statistic&quot;, &quot;p.value&quot;)</code></pre>
-<div id="sfari-gene-sets-analysis" class="section level2" number="5.1">
-<h2><span class="header-section-number">5.1</span> SFARI gene sets analysis</h2>
+<div id="sfari-gene-sets-analysis" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> SFARI gene sets analysis</h2>
 <p>Figure <a href="#fig:sfarigenesets">3</a> shows GSVA scores for SFARI gene sets.</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:sfarigenesets"></span>
 <img src="04_gsva_hdlpfc_files/figure-html/sfarigenesets-1.png" alt="GSVA scores for SFARI gene sets" width="800px"  class="widefigure" />
@@ -674,8 +712,8 @@ Gene_SFARI_all        0.350488 0.000999001
 Gene_SFARI_high       0.286730 0.000999001
 Gene_SFARI_syndromic  0.163606 0.000999001</code></pre>
 </div>
-<div id="birnbaum-gene-sets-analysis" class="section level2" number="5.2">
-<h2><span class="header-section-number">5.2</span> Birnbaum gene sets analysis</h2>
+<div id="birnbaum-gene-sets-analysis" class="section level2" number="4.2">
+<h2><span class="header-section-number">4.2</span> Birnbaum gene sets analysis</h2>
 <p>Figure <a href="#fig:birnbaumgenesets">4</a> shows GSVA scores for Birnbaum et al gene sets.</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:birnbaumgenesets"></span>
 <img src="04_gsva_hdlpfc_files/figure-html/birnbaumgenesets-1.png" alt="GSVA scores for Birnbaum et al gene sets." width="800px"  class="widefigure" />
@@ -698,8 +736,8 @@ SCZ.Meta.analysis 0.1044286 0.000999001
 SCZ.PGC.GWAS      0.0758406 0.000999001
 SCZ.SNV           0.0678499 0.000999001</code></pre>
 </div>
-<div id="selection-of-autocorrelated-gene-sets" class="section level2" number="5.3">
-<h2><span class="header-section-number">5.3</span> Selection of autocorrelated gene sets</h2>
+<div id="selection-of-autocorrelated-gene-sets" class="section level2" number="4.3">
+<h2><span class="header-section-number">4.3</span> Selection of autocorrelated gene sets</h2>
 <p>Table <a href="#tab:gsbymoransi">1</a> below shows the subset of gene sets with
 significant nonzero Moran’s I, in decreasing order, calculated from GSVA
 ES with default parameters.</p>
@@ -1267,7 +1305,7 @@ CD4..T.cell
 0.0047427
 </td>
 <td style="text-align:right;">
-0.3186813
+0.3196803
 </td>
 </tr>
 </tbody>
@@ -1281,8 +1319,8 @@ dim(spe.filt.es.sig)
 [1]    7 3591</code></pre>
 </div>
 </div>
-<div id="cluster-annotation" class="section level1" number="6">
-<h1><span class="header-section-number">6</span> Cluster annotation</h1>
+<div id="cluster-annotation" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Cluster annotation</h1>
 <p>Here we use the previously selected autocorrelated gene sets to annotate
 the gene-level clusters. We first define the following function for that
 purpose, which takes as input an <code>SpatialExperiment</code> object with clusters
@@ -1339,8 +1377,8 @@ Figure 5: <span class="caption-title">Annotation of clusters with gene sets auto
         file=file.path(&quot;_processed_data&quot;,
                        &quot;spe.filt.es.human_dlpfc.rds&quot;))</code></pre>
 </div>
-<div id="session-information" class="section level1" number="7">
-<h1><span class="header-section-number">7</span> Session information</h1>
+<div id="session-information" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Session information</h1>
 <pre class="r"><code>sessionInfo()
 R version 4.4.0 (2024-04-24)
 Platform: x86_64-pc-linux-gnu
@@ -1489,8 +1527,8 @@ loaded via a namespace (and not attached):
 [207] ggnewscale_0.4.10         fansi_1.0.6              
 [209] beeswarm_0.4.0           </code></pre>
 </div>
-<div id="references" class="section level1" number="8">
-<h1><span class="header-section-number">8</span> References</h1>
+<div id="references" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> References</h1>
 </div>
 
 

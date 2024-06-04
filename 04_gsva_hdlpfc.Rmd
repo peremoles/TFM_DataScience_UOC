@@ -177,19 +177,20 @@ spe.filt.es
 ```{r}
 library(nnSVG)
 
-#system.time(spe.nnsvg <- nnSVG(spe.filt[top_hvgs,], assay_name = "logcounts", BPPARAM=MulticoreParam(workers=4)))
+system.time(spe.nnsvg <- nnSVG(spe.filt[top_hvgs,], assay_name = "logcounts", BPPARAM=MulticoreParam(workers=5)))
 system.time(spe.nnsvg.es <-nnSVG(spe.filt.es, assay_name = "es", BPPARAM=MulticoreParam(workers=4)))
 ```
 
 
 ```{r}
 # number of significant SV Genes and Gene Sets
-#table(rowData(spe.nnsvg)$padj <= 0.05)
+table(rowData(spe.nnsvg)$padj <= 0.05)
 table(rowData(spe.nnsvg.es)$padj <= 0.05)
 ```
 
 ```{r}
-#rowData(spe.nnsvg)[order(rowData(spe.nnsvg)$rank)[1:10], ]
+
+rowData(spe.nnsvg)[order(rowData(spe.nnsvg)$rank)[1:5], ]
 ```
 
 ```{r}
@@ -206,30 +207,24 @@ for(j in 1:4){
   svgset <- rownames(rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[j], ])
 
   print(paste("Length of the gene set",svgset,length(gs),"genes"))
-  gs <- gs[1:min(8,length(gs))]
-  
- # df <- sapply(gs, function(g){
-  #  stat <- rowData(spe.nnsvg)[rowData(spe.nnsvg)$gene_id == g, ]
-   # stat
-  #})
-  #df <- do.call(rbind, df)
-  #print(head(df))
-  plts <- list()
+  svgs <- rowData(spe.nnsvg)[gs,]
+  svgs <- svgs[order(svgs$rank),][1:5,]
   i<-1
-  for (g in gs) {
+  plts <- list()
+  for (g in rownames(svgs)) {
     plts[[svgset]] <- plotVisium(spe.filt.es, x_coord="pxl_col_in_fullres",
-                             y_coord="pxl_row_in_fullres", point_size=0.75,
+                             y_coord="pxl_row_in_fullres", point_size=0.5,
                              assay="es", annotate=svgset, facets=NULL) +
                         ggtitle(svgset) + theme(plot.title=element_text(hjust=0.5)) +
                         theme(legend.title=element_blank()) + labs(tag=letters[i])
     plts[[g]] <- plotVisium(spe.filt, x_coord="pxl_col_in_fullres",
-                             y_coord="pxl_row_in_fullres", point_size=0.75,
+                             y_coord="pxl_row_in_fullres", point_size=0.5,
                              assay="logcounts", annotate=g, facets=NULL) +
                         ggtitle(g) + theme(plot.title=element_text(hjust=0.5)) +
                         theme(legend.title=element_blank()) + labs(tag=letters[i])
     i <- i + 1
   }
-  wrap_plots(plts, nrow=ceiling(length(plts)/2))
+  show(wrap_plots(plts, nrow=ceiling(length(plts)/2)))
 }
 ```
 # Moran's I estimation
