@@ -335,16 +335,10 @@ function toggle_visibility(id1) {
   <a href="index.html">Home</a>
 </li>
 <li>
-  <a href="01_qa_pr_mouse.html">QA &amp; processing mouse brain data</a>
+  <a href="03_qa_pr_hdlpfc.html">QA &amp; processing for human DLPFC data</a>
 </li>
 <li>
-  <a href="02_gsva_mouse.html">GSVA analysis mouse brain data</a>
-</li>
-<li>
-  <a href="03_qa_pr_hdlpfc.html">QA &amp; processing human DLPFC data</a>
-</li>
-<li>
-  <a href="04_gsva_hdlpfc.html">GSVA analysis human DLPFC data</a>
+  <a href="04_gsva_hdlpfc.html">Spatial and GSVA analysis for human DLPFC data</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -362,7 +356,7 @@ function toggle_visibility(id1) {
 <p class="author-name">Pere Moles<span class="affil-mark">1*</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>MSc Data Science student, Universitat Oberta de Catalunya</p>
 <p class="author-email"><span class="affil-mark">*</span><a href="mailto:pere.moles@uoc.edu">pere.moles@uoc.edu</a></p>
-<h4 class="date">de juny 1, 2024</h4>
+<h4 class="date">de juny 4, 2024</h4>
 <h4 class="abstract">Abstract</h4>
 <p>Here we perform a GSVA analysis of the 10x Visium human DLPFC data.</p>
 
@@ -380,8 +374,10 @@ dim(spe.filt)
 <pre class="r"><code>
 cell_types &lt;- readRDS(file.path(&quot;_processed_data&quot;, &quot;cell_types.human_dlpfc.rds&quot;))</code></pre>
 </div>
-<div id="dimensionality-reduction" class="section level1" number="2">
-<h1><span class="header-section-number">2</span> Dimensionality reduction</h1>
+<div id="clustering" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Clustering</h1>
+<div id="pca-based-clustering" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> PCA Based Clustering</h2>
 <p>Select a subset of top highly-variable genes (HVGs).</p>
 <pre class="r"><code>library(scran)
 S&#39;està carregant el paquet requerit: scuttle</code></pre>
@@ -414,9 +410,6 @@ reducedDimNames(spe.filt)
 [4] &quot;TSNE_perplexity20&quot; &quot;TSNE_perplexity80&quot; &quot;UMAP_neighbors15&quot; </code></pre>
 <pre class="r"><code>dim(reducedDim(spe.filt, &quot;PCA&quot;))
 [1] 3591   50</code></pre>
-</div>
-<div id="clustering" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Clustering</h1>
 <p>Here we perform a non-spatial graph-based clustering of the spots,
 targeting 7 clusters, which is the number of anatomically annotated
 groups of spots (six cortical layers and white matter) stored in the
@@ -457,14 +450,61 @@ Figure 2: <span class="caption-title">Clustering of the spots</span><br>
 </p>
 </div>
 </div>
-<div id="gsva-enrichment-score-estimation" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> GSVA enrichment score estimation</h1>
+<div id="spatialpca-based-clustering" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> SpatialPCA based clustering</h2>
+<pre class="r"><code>library(SpatialPCA)
+LIBD &lt;- CreateSpatialPCAObject(counts=as.matrix(assays(spe.filt)$counts), location=spatialCoords(spe.filt), project = &quot;SpatialPCA&quot;,gene.type=&quot;spatial&quot;,sparkversion=&quot;sparkx&quot;,numCores_spark=5, customGenelist=NULL,min.loctions = 20, min.features=20)
+## Use SCTransform function in Seurat to normalize data. 
+## Use sparkx function in SPARK to select spatially variable genes. 
+## ===== SPARK-X INPUT INFORMATION ==== 
+## number of total samples: 3591 
+## number of total genes: 11364 
+## Running with 5 cores 
+## Testing With Projection Kernel
+## Testing With Gaussian Kernel 1
+## Testing With Gaussian Kernel 2
+## Testing With Gaussian Kernel 3
+## Testing With Gaussian Kernel 4
+## Testing With Gaussian Kernel 5
+## Testing With Cosine Kernel 1
+## Testing With Cosine Kernel 2
+## Testing With Cosine Kernel 3
+## Testing With Cosine Kernel 4
+## Testing With Cosine Kernel 5
+## Identified  10097  spatial genes through SPARK-X function. 
+## Using top  3000  significant spatially variable genes. </code></pre>
+<pre class="r"><code>
+start_time &lt;- Sys.time()
+LIBD = SpatialPCA_buildKernel(LIBD, kerneltype=&quot;gaussian&quot;, bandwidthtype=&quot;SJ&quot;,bandwidth.set.by.user=NULL)
+## Selected kernel type is:  gaussian  
+## The bandwidth is:  0.0458021928511147  
+## Calculating kernel matrix
+## Finished calculating kernel matrix.</code></pre>
+<pre class="r"><code>LIBD = SpatialPCA_EstimateLoading(LIBD,fast=FALSE,SpatialPCnum=20)
+[1] &quot;Eigen decomposition on kernel matrix!&quot;
+[1] &quot;Using all eigenvectors and eigenvalues in the Kernel matrix!&quot;</code></pre>
+<pre class="r"><code>LIBD = SpatialPCA_SpatialPCs(LIBD, fast=FALSE)
+end_time &lt;- Sys.time()
+T = end_time - start_time
+T
+Time difference of 2.397296 mins</code></pre>
+<pre class="r"><code>clusterlabel= walktrap_clustering(clusternum=7,latent_dat=LIBD@SpatialPCs,knearest=70 ) 
+# for other Visium or ST data, the user can also set k nearest number as round(sqrt(dim(SpatialPCAobject@SpatialPCs)[2])) by default.
+clusterlabel_refine = refine_cluster_10x(clusterlabels=clusterlabel,location=LIBD@location,shape=&quot;hexagon&quot;)</code></pre>
+<pre class="r"><code>cbp=c(&quot;#9C9EDE&quot; ,&quot;#5CB85C&quot; ,&quot;#E377C2&quot;, &quot;#4DBBD5&quot; ,&quot;#FED439&quot; ,&quot;#FF9896&quot;, &quot;#FFDC91&quot;)
+spclus &lt;- plot_cluster(location=cbind(-spatialCoords(spe.filt)[,2],spatialCoords(spe.filt)[,1]),clusterlabel=clusterlabel_refine,pointsize=1.5 ,title_in=paste0(&quot;SpatialPCA clustering of Human DLPFC data&quot;),color_in=cbp)
+spclus</code></pre>
+<p><img src="04_gsva_hdlpfc_files/figure-html/unnamed-chunk-9-1.png" width="100%"  class="widefigure" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="gsva-enrichment-score-estimation" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> GSVA enrichment score estimation</h1>
 <p>Run GSVA with default parameters.</p>
 <pre class="r"><code>library(GSVA)
 library(BiocParallel)
 
 gsvaPar &lt;- gsvaParam(spe.filt, cell_types, assay=&quot;logcounts&quot;,
-                     minSize=5)
+                     minSize=5, kcdf = &#39;none&#39;)
 spe.filt.es &lt;- gsva(gsvaPar, verbose=FALSE, BPPARAM=MulticoreParam(workers=3))
 dim(spe.filt.es)
 [1]   50 3591</code></pre>
@@ -484,6 +524,121 @@ altExpNames(0):
 spatialCoords names(2) : pxl_col_in_fullres pxl_row_in_fullres
 imgData names(4): sample_id image_id data scaleFactor</code></pre>
 </div>
+<div id="spatially-variable-gene-sets" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Spatially Variable Gene Sets</h1>
+<pre class="r"><code>library(nnSVG)
+
+#system.time(spe.nnsvg &lt;- nnSVG(spe.filt[top_hvgs,], assay_name = &quot;logcounts&quot;, BPPARAM=MulticoreParam(workers=4)))
+system.time(spe.nnsvg.es &lt;-nnSVG(spe.filt.es, assay_name = &quot;es&quot;, BPPARAM=MulticoreParam(workers=4)))
+       usuari       sistema transcorregut 
+      137.274       141.534        50.846 </code></pre>
+<pre class="r"><code># number of significant SV Genes and Gene Sets
+#table(rowData(spe.nnsvg)$padj &lt;= 0.05)
+table(rowData(spe.nnsvg.es)$padj &lt;= 0.05)
+
+FALSE  TRUE 
+    4    46 </code></pre>
+<pre class="r"><code>#rowData(spe.nnsvg)[order(rowData(spe.nnsvg)$rank)[1:10], ]</code></pre>
+<pre class="r"><code>rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[1:10], ]
+DataFrame with 10 rows and 15 columns
+                                                                                 gs
+                                                                    &lt;CharacterList&gt;
+Mature.oligodendrocyte          ENSG00000204655,ENSG00000123560,ENSG00000173786,...
+Oligodendrocyte                 ENSG00000175206,ENSG00000175130,ENSG00000116133,...
+Microglial.cell                 ENSG00000078808,ENSG00000116251,ENSG00000142583,...
+Mid.radical.glial.cell          ENSG00000197921,ENSG00000173406,ENSG00000132688,...
+Astrocyte                       ENSG00000117318,ENSG00000177606,ENSG00000162599,...
+Glial.cell                      ENSG00000160678,ENSG00000079215,ENSG00000204655,...
+Lake.et.al.Science.Ex1          ENSG00000115756,ENSG00000135919,ENSG00000113100,...
+Oligodendrocyte.progenitor.cell ENSG00000132692,ENSG00000144230,ENSG00000134853,...
+Neuron                          ENSG00000020129,ENSG00000162409,ENSG00000117569,...
+Gene_SFARI_all                  ENSG00000183044,ENSG00000064687,ENSG00000087085,...
+                                   sigma.sq      tau.sq       phi    loglik
+                                  &lt;numeric&gt;   &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+Mature.oligodendrocyte          0.069855181 0.022131732   3.72116   1338.80
+Oligodendrocyte                 0.004698481 0.001845184   2.98630   5879.77
+Microglial.cell                 0.002317252 0.001234686  37.03135   5771.76
+Mid.radical.glial.cell          0.004174058 0.004548684  25.62809   4004.84
+Astrocyte                       0.002600282 0.002784953  19.79888   4959.55
+Glial.cell                      0.014520083 0.024979036  11.15414   1242.36
+Lake.et.al.Science.Ex1          0.006744862 0.012648355   5.78781   2535.58
+Oligodendrocyte.progenitor.cell 0.008795706 0.020182902   2.64254   1744.33
+Neuron                          0.000958350 0.001942713  23.07763   5747.60
+Gene_SFARI_all                  0.000225062 0.000541505  15.62419   8132.64
+                                  runtime      mean       var     spcov
+                                &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+Mature.oligodendrocyte              1.906        NA        NA        NA
+Oligodendrocyte                     1.929        NA        NA        NA
+Microglial.cell                     3.557        NA        NA        NA
+Mid.radical.glial.cell              3.412        NA        NA        NA
+Astrocyte                           3.500        NA        NA        NA
+Glial.cell                          3.123        NA        NA        NA
+Lake.et.al.Science.Ex1              1.040        NA        NA        NA
+Oligodendrocyte.progenitor.cell     2.469        NA        NA        NA
+Neuron                              3.986        NA        NA        NA
+Gene_SFARI_all                      1.918        NA        NA        NA
+                                  prop_sv loglik_lm   LR_stat      rank
+                                &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+Mature.oligodendrocyte           0.759403 -2111.052   6899.70         1
+Oligodendrocyte                  0.718020  2962.735   5834.08         2
+Microglial.cell                  0.652391  4278.861   2985.80         3
+Mid.radical.glial.cell           0.478526  2866.222   2277.24         4
+Astrocyte                        0.482854  3878.357   2162.39         5
+Glial.cell                       0.367605   343.234   1798.26         6
+Lake.et.al.Science.Ex1           0.347795  1802.148   1466.86         7
+Oligodendrocyte.progenitor.cell  0.303524  1070.772   1347.13         8
+Neuron                           0.330344  5126.095   1243.01         9
+Gene_SFARI_all                   0.293597  7565.368   1134.54        10
+                                     pval      padj
+                                &lt;numeric&gt; &lt;numeric&gt;
+Mature.oligodendrocyte                  0         0
+Oligodendrocyte                         0         0
+Microglial.cell                         0         0
+Mid.radical.glial.cell                  0         0
+Astrocyte                               0         0
+Glial.cell                              0         0
+Lake.et.al.Science.Ex1                  0         0
+Oligodendrocyte.progenitor.cell         0         0
+Neuron                                  0         0
+Gene_SFARI_all                          0         0</code></pre>
+<p>Let’s check how the genes in the most spatially variable gene sets behave.</p>
+<pre class="r"><code># Most spatially variable gene set
+
+for(j in 1:4){
+  gs &lt;- as.character(unlist(rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[j], &quot;gs&quot;]))
+  svgset &lt;- rownames(rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[j], ])
+
+  print(paste(&quot;Length of the gene set&quot;,svgset,length(gs),&quot;genes&quot;))
+  gs &lt;- gs[1:min(8,length(gs))]
+  
+ # df &lt;- sapply(gs, function(g){
+  #  stat &lt;- rowData(spe.nnsvg)[rowData(spe.nnsvg)$gene_id == g, ]
+   # stat
+  #})
+  #df &lt;- do.call(rbind, df)
+  #print(head(df))
+  plts &lt;- list()
+  i&lt;-1
+  for (g in gs) {
+    plts[[svgset]] &lt;- plotVisium(spe.filt.es, x_coord=&quot;pxl_col_in_fullres&quot;,
+                             y_coord=&quot;pxl_row_in_fullres&quot;, point_size=0.75,
+                             assay=&quot;es&quot;, annotate=svgset, facets=NULL) +
+                        ggtitle(svgset) + theme(plot.title=element_text(hjust=0.5)) +
+                        theme(legend.title=element_blank()) + labs(tag=letters[i])
+    plts[[g]] &lt;- plotVisium(spe.filt, x_coord=&quot;pxl_col_in_fullres&quot;,
+                             y_coord=&quot;pxl_row_in_fullres&quot;, point_size=0.75,
+                             assay=&quot;logcounts&quot;, annotate=g, facets=NULL) +
+                        ggtitle(g) + theme(plot.title=element_text(hjust=0.5)) +
+                        theme(legend.title=element_blank()) + labs(tag=letters[i])
+    i &lt;- i + 1
+  }
+  wrap_plots(plts, nrow=ceiling(length(plts)/2))
+}
+[1] &quot;Length of the gene set Mature.oligodendrocyte 5 genes&quot;
+[1] &quot;Length of the gene set Oligodendrocyte 165 genes&quot;
+[1] &quot;Length of the gene set Microglial.cell 250 genes&quot;
+[1] &quot;Length of the gene set Mid.radical.glial.cell 20 genes&quot;</code></pre>
+</div>
 <div id="morans-i-estimation" class="section level1" number="5">
 <h1><span class="header-section-number">5</span> Moran’s I estimation</h1>
 <p>Here we calculate Moran’s I for each gene set in the GSVA
@@ -497,22 +652,57 @@ vg &lt;- findVisiumGraph(spe.filt.es,
                       zero.policy=TRUE)
 colGraph(sfe, &quot;visium&quot;, sample_id=&quot;151673&quot;) &lt;- vg
 
-moransi &lt;- rowData(runUnivariate(sfe, type=&quot;moran.test&quot;, colGraphName=&quot;visium&quot;,
+moransi &lt;- rowData(runUnivariate(sfe, type=&quot;moran.mc&quot;, nsim = 1000, colGraphName=&quot;visium&quot;,
                                  exprs_values=&quot;es&quot;, zero.policy=TRUE))
-moransi &lt;- moransi[, 2:3]
+moransi &lt;- moransi[, c(2,4)]
 colnames(moransi) &lt;- c(&quot;statistic&quot;, &quot;p.value&quot;)</code></pre>
+<div id="sfari-gene-sets-analysis" class="section level2" number="5.1">
+<h2><span class="header-section-number">5.1</span> SFARI gene sets analysis</h2>
+<p>Figure <a href="#fig:sfarigenesets">3</a> shows GSVA scores for SFARI gene sets.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:sfarigenesets"></span>
+<img src="04_gsva_hdlpfc_files/figure-html/sfarigenesets-1.png" alt="GSVA scores for SFARI gene sets" width="800px"  class="widefigure" />
+<p class="caption">
+Figure 3: <span class="caption-title">GSVA scores for SFARI gene sets</span><br>
+</p>
 </div>
-<div id="selection-of-autocorrelated-gene-sets" class="section level1" number="6">
-<h1><span class="header-section-number">6</span> Selection of autocorrelated gene sets</h1>
+<p>SFARI gene sets spatial autocorrelation</p>
+<pre class="r"><code>moransi[names(cell_types[c(96:98)]),]
+DataFrame with 3 rows and 2 columns
+                     statistic     p.value
+                     &lt;numeric&gt;   &lt;numeric&gt;
+Gene_SFARI_all        0.350488 0.000999001
+Gene_SFARI_high       0.286730 0.000999001
+Gene_SFARI_syndromic  0.163606 0.000999001</code></pre>
+</div>
+<div id="birnbaum-gene-sets-analysis" class="section level2" number="5.2">
+<h2><span class="header-section-number">5.2</span> Birnbaum gene sets analysis</h2>
+<p>Figure <a href="#fig:birnbaumgenesets">4</a> shows GSVA scores for Birnbaum et al gene sets.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:birnbaumgenesets"></span>
+<img src="04_gsva_hdlpfc_files/figure-html/birnbaumgenesets-1.png" alt="GSVA scores for Birnbaum et al gene sets." width="800px"  class="widefigure" />
+<p class="caption">
+Figure 4: <span class="caption-title">GSVA scores for Birnbaum et al gene sets</span><br>
+</p>
+</div>
+<pre class="r"><code>moransi[names(cell_types[c(99:108)]),]
+DataFrame with 10 rows and 2 columns
+                  statistic     p.value
+                  &lt;numeric&gt;   &lt;numeric&gt;
+ASD.CNV           0.1085017 0.000999001
+ASD.DATABASE      0.1803301 0.000999001
+BPAD.GWAS         0.0445744 0.000999001
+ID                0.1154954 0.000999001
+NDD               0.0116347 0.106893107
+Neurodegenerative 0.0873586 0.000999001
+SCZ.CNV           0.1059468 0.000999001
+SCZ.Meta.analysis 0.1044286 0.000999001
+SCZ.PGC.GWAS      0.0758406 0.000999001
+SCZ.SNV           0.0678499 0.000999001</code></pre>
+</div>
+<div id="selection-of-autocorrelated-gene-sets" class="section level2" number="5.3">
+<h2><span class="header-section-number">5.3</span> Selection of autocorrelated gene sets</h2>
 <p>Table <a href="#tab:gsbymoransi">1</a> below shows the subset of gene sets with
 significant nonzero Moran’s I, in decreasing order, calculated from GSVA
 ES with default parameters.</p>
-<pre class="r"><code>mask &lt;- p.adjust(moransi$p.value, method=&quot;bonferroni&quot;) &lt; 0.01
-sum(mask)
-[1] 45</code></pre>
-<pre class="r"><code>moransi &lt;- moransi[mask, ]
-dim(moransi)
-[1] 45  2</code></pre>
 <div class='horizontal-scroll'><table class="table table-striped table-hover table-responsive table" style="margin-left: auto; margin-right: auto; margin-left: auto; margin-right: auto;">
 <caption>
 <span id="tab:gsbymoransi">Table 1: </span>Significantly autocorrelated gene sets, ordered by decreasing Morans’I.
@@ -535,10 +725,10 @@ p.value
 Mature.oligodendrocyte
 </td>
 <td style="text-align:right;">
-73.904562
+0.8720535
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -546,32 +736,10 @@ Mature.oligodendrocyte
 Oligodendrocyte
 </td>
 <td style="text-align:right;">
-73.699208
+0.8256448
 </td>
 <td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Neuron
-</td>
-<td style="text-align:right;">
-60.870620
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Gene_SFARI_all
-</td>
-<td style="text-align:right;">
-50.664764
-</td>
-<td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -579,21 +747,10 @@ Gene_SFARI_all
 Microglial.cell
 </td>
 <td style="text-align:right;">
-49.041618
+0.6108444
 </td>
 <td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Gene_SFARI_high
-</td>
-<td style="text-align:right;">
-43.955305
-</td>
-<td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -601,98 +758,10 @@ Gene_SFARI_high
 Mid.radical.glial.cell
 </td>
 <td style="text-align:right;">
-42.533870
+0.5321133
 </td>
 <td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Excitatory.neuron
-</td>
-<td style="text-align:right;">
-42.382422
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Glial.cell
-</td>
-<td style="text-align:right;">
-38.855312
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Lake.et.al.Science.Ex6
-</td>
-<td style="text-align:right;">
-38.627916
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ASD.DATABASE
-</td>
-<td style="text-align:right;">
-35.966437
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Oligodendrocyte.precursor.cell
-</td>
-<td style="text-align:right;">
-35.777221
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Lake.et.al.Science.Ex1
-</td>
-<td style="text-align:right;">
-33.448123
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Gene_SFARI_syndromic
-</td>
-<td style="text-align:right;">
-33.110800
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Oligodendrocyte.progenitor.cell
-</td>
-<td style="text-align:right;">
-32.289979
-</td>
-<td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -700,43 +769,76 @@ Oligodendrocyte.progenitor.cell
 Astrocyte
 </td>
 <td style="text-align:right;">
-32.025713
+0.5074616
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Inhibitory.neuron
+Glial.cell
 </td>
 <td style="text-align:right;">
-30.177978
+0.4630534
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Lake.et.al.Science.Ex8
+Lake.et.al.Science.Ex1
 </td>
 <td style="text-align:right;">
-29.200835
+0.4003365
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Lake.et.al.Science.Ex2
+Oligodendrocyte.progenitor.cell
 </td>
 <td style="text-align:right;">
-25.043254
+0.3873250
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Neuron
+</td>
+<td style="text-align:right;">
+0.3709289
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gene_SFARI_all
+</td>
+<td style="text-align:right;">
+0.3504879
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Oligodendrocyte.precursor.cell
+</td>
+<td style="text-align:right;">
+0.3466464
+</td>
+<td style="text-align:right;">
+0.0009990
 </td>
 </tr>
 <tr>
@@ -744,65 +846,43 @@ Lake.et.al.Science.Ex2
 Myeloid.cell
 </td>
 <td style="text-align:right;">
-24.964278
+0.3020542
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Endothelial.cell
+Gene_SFARI_high
 </td>
 <td style="text-align:right;">
-21.475958
+0.2867298
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Macrophage
+Lake.et.al.Science.Ex8
 </td>
 <td style="text-align:right;">
-21.401475
+0.2751603
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-ID
+Lake.et.al.Science.Ex6
 </td>
 <td style="text-align:right;">
-21.352800
+0.2707421
 </td>
 <td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ASD.CNV
-</td>
-<td style="text-align:right;">
-20.565255
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Interneuron
-</td>
-<td style="text-align:right;">
-19.390903
-</td>
-<td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -810,10 +890,43 @@ Interneuron
 Non.neuron
 </td>
 <td style="text-align:right;">
-18.665643
+0.2679811
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lake.et.al.Science.Ex2
+</td>
+<td style="text-align:right;">
+0.2506638
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inhibitory.neuron
+</td>
+<td style="text-align:right;">
+0.2409752
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Excitatory.neuron
+</td>
+<td style="text-align:right;">
+0.2223157
+</td>
+<td style="text-align:right;">
+0.0009990
 </td>
 </tr>
 <tr>
@@ -821,43 +934,10 @@ Non.neuron
 Neural.progenitor.cell
 </td>
 <td style="text-align:right;">
-18.583642
+0.2094519
 </td>
 <td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Pericyte
-</td>
-<td style="text-align:right;">
-18.039280
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Lake.et.al.Science.In3
-</td>
-<td style="text-align:right;">
-16.295976
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Glutamatergic.neuron
-</td>
-<td style="text-align:right;">
-15.393401
-</td>
-<td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -865,65 +945,43 @@ Glutamatergic.neuron
 Fibroblast
 </td>
 <td style="text-align:right;">
-15.324703
+0.1974710
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Sensory.neuron
+Glutamatergic.neuron
 </td>
 <td style="text-align:right;">
-13.851672
+0.1897590
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-SCZ.Meta.analysis
+ASD.DATABASE
 </td>
 <td style="text-align:right;">
-13.221624
+0.1803301
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Neural.stem.cell
+Gene_SFARI_syndromic
 </td>
 <td style="text-align:right;">
-12.375939
+0.1636061
 </td>
 <td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Stem.cell
-</td>
-<td style="text-align:right;">
-11.567339
-</td>
-<td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-SCZ.SNV
-</td>
-<td style="text-align:right;">
-8.378627
-</td>
-<td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -931,21 +989,10 @@ SCZ.SNV
 Radial.glial.cell
 </td>
 <td style="text-align:right;">
-8.345113
+0.1630596
 </td>
 <td style="text-align:right;">
-0.00e+00
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Deep.layer.neuron
-</td>
-<td style="text-align:right;">
-8.330371
-</td>
-<td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -953,10 +1000,10 @@ Deep.layer.neuron
 Truncated.radial.glial.cell
 </td>
 <td style="text-align:right;">
-8.098941
+0.1499160
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
@@ -964,54 +1011,153 @@ Truncated.radial.glial.cell
 Progenitor.cell
 </td>
 <td style="text-align:right;">
-7.952566
+0.1389278
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Lake.et.al.Science.Ex4
+Sensory.neuron
 </td>
 <td style="text-align:right;">
-6.843168
+0.1313330
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-BPAD.GWAS
+Deep.layer.neuron
 </td>
 <td style="text-align:right;">
-6.830346
+0.1236193
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Mesenchymal.stromal.cell
+Endothelial.cell
 </td>
 <td style="text-align:right;">
-6.206094
+0.1176369
 </td>
 <td style="text-align:right;">
-0.00e+00
+0.0009990
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-SCZ.PGC.GWAS
+ID
 </td>
 <td style="text-align:right;">
-4.292178
+0.1154954
 </td>
 <td style="text-align:right;">
-8.80e-06
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Interneuron
+</td>
+<td style="text-align:right;">
+0.1146196
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ASD.CNV
+</td>
+<td style="text-align:right;">
+0.1085017
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SCZ.CNV
+</td>
+<td style="text-align:right;">
+0.1059468
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SCZ.Meta.analysis
+</td>
+<td style="text-align:right;">
+0.1044286
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Neural.stem.cell
+</td>
+<td style="text-align:right;">
+0.1017215
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pericyte
+</td>
+<td style="text-align:right;">
+0.0978981
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Macrophage
+</td>
+<td style="text-align:right;">
+0.0947877
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lake.et.al.Science.In3
+</td>
+<td style="text-align:right;">
+0.0946480
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Stem.cell
+</td>
+<td style="text-align:right;">
+0.0929401
+</td>
+<td style="text-align:right;">
+0.0009990
 </td>
 </tr>
 <tr>
@@ -1019,10 +1165,109 @@ SCZ.PGC.GWAS
 Neurodegenerative
 </td>
 <td style="text-align:right;">
-4.123963
+0.0873586
 </td>
 <td style="text-align:right;">
-1.86e-05
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lake.et.al.Science.Ex4
+</td>
+<td style="text-align:right;">
+0.0818042
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SCZ.PGC.GWAS
+</td>
+<td style="text-align:right;">
+0.0758406
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SCZ.SNV
+</td>
+<td style="text-align:right;">
+0.0678499
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BPAD.GWAS
+</td>
+<td style="text-align:right;">
+0.0445744
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Epithelial.cell
+</td>
+<td style="text-align:right;">
+0.0396025
+</td>
+<td style="text-align:right;">
+0.0009990
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Effector.memory.CD4..T.cell
+</td>
+<td style="text-align:right;">
+0.0135817
+</td>
+<td style="text-align:right;">
+0.0779221
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mesenchymal.stromal.cell
+</td>
+<td style="text-align:right;">
+0.0131870
+</td>
+<td style="text-align:right;">
+0.1178821
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NDD
+</td>
+<td style="text-align:right;">
+0.0116347
+</td>
+<td style="text-align:right;">
+0.1068931
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CD4..T.cell
+</td>
+<td style="text-align:right;">
+0.0047427
+</td>
+<td style="text-align:right;">
+0.3186813
 </td>
 </tr>
 </tbody>
@@ -1030,13 +1275,14 @@ Neurodegenerative
 <p>We subset the GSVA ES calculated with default parameters to those gene sets
 significantly autocorrelated with a Bonferroni FWER &lt; 0.01, and a minimum
 Moran’s I value of 0.4.</p>
-<pre class="r"><code>sig.genesets &lt;- rownames(moransi)[moransi$statistic &gt; 40]
+<pre class="r"><code>sig.genesets &lt;- rownames(moransi)[moransi$statistic &gt; 0.4]
 spe.filt.es.sig &lt;- spe.filt.es[rownames(spe.filt.es) %in% sig.genesets]
 dim(spe.filt.es.sig)
-[1]    8 3591</code></pre>
+[1]    7 3591</code></pre>
 </div>
-<div id="cluster-annotation" class="section level1" number="7">
-<h1><span class="header-section-number">7</span> Cluster annotation</h1>
+</div>
+<div id="cluster-annotation" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Cluster annotation</h1>
 <p>Here we use the previously selected autocorrelated gene sets to annotate
 the gene-level clusters. We first define the following function for that
 purpose, which takes as input an <code>SpatialExperiment</code> object with clusters
@@ -1073,47 +1319,28 @@ corresponding position.</p>
 calculated with default parameters.</p>
 <pre class="r"><code>annotatedgs &lt;- clustertogeneset(spe.filt.es.sig)
 annotatedgs
-[1] &quot;Oligodendrocyte&quot;        &quot;Mature.oligodendrocyte&quot; &quot;Mature.oligodendrocyte&quot;
-[4] &quot;Neuron&quot;                 &quot;Neuron&quot;                 &quot;Mature.oligodendrocyte&quot;
-[7] &quot;Oligodendrocyte&quot;       </code></pre>
+[1] &quot;Astrocyte&quot;              &quot;Lake.et.al.Science.Ex1&quot; &quot;Oligodendrocyte&quot;       
+[4] &quot;Oligodendrocyte&quot;        &quot;Mature.oligodendrocyte&quot; &quot;Lake.et.al.Science.Ex1&quot;
+[7] &quot;Mature.oligodendrocyte&quot;</code></pre>
 <pre class="r"><code>annotatedgs &lt;- unique(annotatedgs)
 annotatedgs
-[1] &quot;Oligodendrocyte&quot;        &quot;Mature.oligodendrocyte&quot; &quot;Neuron&quot;                </code></pre>
-<p>Figure <a href="#fig:hcannotclusters">3</a> shows these unique gene sets that mostly
+[1] &quot;Astrocyte&quot;              &quot;Lake.et.al.Science.Ex1&quot; &quot;Oligodendrocyte&quot;       
+[4] &quot;Mature.oligodendrocyte&quot;</code></pre>
+<p>Figure <a href="#fig:hcannotclusters">5</a> shows these unique gene sets that mostly
 correlated with some of the clusters.</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:hcannotclusters"></span>
 <img src="04_gsva_hdlpfc_files/figure-html/hcannotclusters-1.png" alt="Annotation of clusters with gene sets autocorrelated with GSVA ES calculated with default parameters. (a) Original tissue image. (b) Spot annotation by gene-level clustering. (c) to (h) enrichment scores for each of the significantly autocorrelated gene sets that mostly correlated with at least one of the gene-level clusters." width="800px"  class="widefigure" />
 <p class="caption">
-Figure 3: <span class="caption-title">Annotation of clusters with gene sets autocorrelated with GSVA ES calculated with default parameters</span><br>(a) Original tissue image. (b) Spot annotation by gene-level clustering. (c) to (h) enrichment scores for each of the significantly autocorrelated gene sets that mostly correlated with at least one of the gene-level clusters.
+Figure 5: <span class="caption-title">Annotation of clusters with gene sets autocorrelated with GSVA ES calculated with default parameters</span><br>(a) Original tissue image. (b) Spot annotation by gene-level clustering. (c) to (h) enrichment scores for each of the significantly autocorrelated gene sets that mostly correlated with at least one of the gene-level clusters.
 </p>
 </div>
 <p>Finally, store the GSVA ES calculated with default parameters.</p>
 <pre class="r"><code>saveRDS(spe.filt.es,
         file=file.path(&quot;_processed_data&quot;,
                        &quot;spe.filt.es.human_dlpfc.rds&quot;))</code></pre>
-<div id="plot-sfari-gene-sets" class="section level2" number="7.1">
-<h2><span class="header-section-number">7.1</span> Plot SFARI gene sets</h2>
-<p>Figure <a href="#fig:sfarigenesets">4</a> shows GSVA scores for SFARI gene sets.</p>
-<div class="figure" style="text-align: center"><span style="display:block;" id="fig:sfarigenesets"></span>
-<img src="04_gsva_hdlpfc_files/figure-html/sfarigenesets-1.png" alt="GSVA scores for SFARI gene sets" width="800px"  class="widefigure" />
-<p class="caption">
-Figure 4: <span class="caption-title">GSVA scores for SFARI gene sets</span><br>
-</p>
 </div>
-</div>
-<div id="plot-birnbaum-gene-sets" class="section level2" number="7.2">
-<h2><span class="header-section-number">7.2</span> Plot Birnbaum gene sets</h2>
-<p>Figure <a href="#fig:birnbaumgenesets">5</a> shows GSVA scores for Birnbaum et al gene sets.</p>
-<div class="figure" style="text-align: center"><span style="display:block;" id="fig:birnbaumgenesets"></span>
-<img src="04_gsva_hdlpfc_files/figure-html/birnbaumgenesets-1.png" alt="GSVA scores for Birnbaum et al gene sets." width="800px"  class="widefigure" />
-<p class="caption">
-Figure 5: <span class="caption-title">GSVA scores for Birnbaum et al gene sets</span><br>
-</p>
-</div>
-</div>
-</div>
-<div id="session-information" class="section level1" number="8">
-<h1><span class="header-section-number">8</span> Session information</h1>
+<div id="session-information" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> Session information</h1>
 <pre class="r"><code>sessionInfo()
 R version 4.4.0 (2024-04-24)
 Platform: x86_64-pc-linux-gnu
@@ -1140,96 +1367,130 @@ attached base packages:
 
 other attached packages:
  [1] limma_3.60.2                   Voyager_1.6.0                 
- [3] SpatialFeatureExperiment_1.6.1 BiocParallel_1.38.0           
- [5] GSVA_1.52.2                    ggspavis_1.10.0               
- [7] patchwork_1.2.0                RColorBrewer_1.1-3            
- [9] scater_1.32.0                  ggplot2_3.5.1                 
-[11] scran_1.32.0                   scuttle_1.14.0                
-[13] SpatialExperiment_1.14.0       SingleCellExperiment_1.26.0   
-[15] SummarizedExperiment_1.34.0    Biobase_2.64.0                
-[17] GenomicRanges_1.56.0           GenomeInfoDb_1.40.1           
-[19] IRanges_2.38.0                 S4Vectors_0.42.0              
-[21] BiocGenerics_0.50.0            MatrixGenerics_1.16.0         
-[23] matrixStats_1.3.0              kableExtra_1.4.0              
-[25] knitr_1.47                     BiocStyle_2.32.0              
+ [3] SpatialFeatureExperiment_1.6.1 nnSVG_1.8.0                   
+ [5] BiocParallel_1.38.0            GSVA_1.52.2                   
+ [7] RSpectra_0.16-1                SpatialPCA_1.3.0              
+ [9] ggspavis_1.10.0                patchwork_1.2.0               
+[11] RColorBrewer_1.1-3             scater_1.32.0                 
+[13] ggplot2_3.5.1                  scran_1.32.0                  
+[15] scuttle_1.14.0                 SpatialExperiment_1.14.0      
+[17] SingleCellExperiment_1.26.0    SummarizedExperiment_1.34.0   
+[19] Biobase_2.64.0                 GenomicRanges_1.56.0          
+[21] GenomeInfoDb_1.40.1            IRanges_2.38.0                
+[23] S4Vectors_0.42.0               BiocGenerics_0.50.0           
+[25] MatrixGenerics_1.16.0          matrixStats_1.3.0             
+[27] kableExtra_1.4.0               knitr_1.47                    
+[29] BiocStyle_2.32.0              
 
 loaded via a namespace (and not attached):
-  [1] bitops_1.0-7              filelock_1.0.3           
-  [3] tibble_3.2.1              R.oo_1.26.0              
-  [5] graph_1.82.0              XML_3.99-0.16.1          
-  [7] lifecycle_1.0.4           sf_1.0-16                
-  [9] edgeR_4.2.0               lattice_0.22-6           
- [11] magrittr_2.0.3            sass_0.4.9               
- [13] rmarkdown_2.27            jquerylib_0.1.4          
- [15] yaml_2.3.8                metapod_1.12.0           
- [17] ggside_0.3.1              sp_2.1-4                 
- [19] DBI_1.2.2                 abind_1.4-5              
- [21] zlibbioc_1.50.0           purrr_1.0.2              
- [23] R.utils_2.12.3            RCurl_1.98-1.14          
- [25] GenomeInfoDbData_1.2.12   ggrepel_0.9.5            
- [27] irlba_2.3.5.1             terra_1.7-78             
- [29] units_0.8-5               RSpectra_0.16-1          
- [31] annotate_1.82.0           dqrng_0.4.1              
- [33] svglite_2.1.3             DelayedMatrixStats_1.26.0
- [35] codetools_0.2-20          DropletUtils_1.24.0      
- [37] DelayedArray_0.30.1       xml2_1.3.6               
- [39] tidyselect_1.2.1          memuse_4.2-3             
- [41] UCSC.utils_1.0.0          farver_2.1.2             
- [43] ScaledMatrix_1.12.0       viridis_0.6.5            
- [45] BiocFileCache_2.12.0      jsonlite_1.8.8           
- [47] BiocNeighbors_1.22.0      e1071_1.7-14             
- [49] systemfonts_1.1.0         ggnewscale_0.4.10        
- [51] tools_4.4.0               Rcpp_1.0.12              
- [53] glue_1.7.0                gridExtra_2.3            
- [55] SparseArray_1.4.8         xfun_0.44                
- [57] EBImage_4.46.0            dplyr_1.1.4              
- [59] HDF5Array_1.32.0          withr_3.0.0              
- [61] BiocManager_1.30.23       fastmap_1.2.0            
- [63] boot_1.3-30               rhdf5filters_1.16.0      
- [65] bluster_1.14.0            fansi_1.0.6              
- [67] spData_2.3.1              digest_0.6.35            
- [69] rsvd_1.0.5                R6_2.5.1                 
- [71] wk_0.9.1                  colorspace_2.1-0         
- [73] jpeg_0.1-10               RSQLite_2.3.7            
- [75] R.methodsS3_1.8.2         utf8_1.2.4               
- [77] generics_0.1.3            data.table_1.15.4        
- [79] class_7.3-22              httr_1.4.7               
- [81] htmlwidgets_1.6.4         S4Arrays_1.4.1           
- [83] spdep_1.3-4               pkgconfig_2.0.3          
- [85] scico_1.5.0               gtable_0.3.5             
- [87] blob_1.2.4                XVector_0.44.0           
- [89] htmltools_0.5.8.1         bookdown_0.39            
- [91] fftwtools_0.9-11          GSEABase_1.66.0          
- [93] scales_1.3.0              png_0.1-8                
- [95] rstudioapi_0.16.0         rjson_0.2.21             
- [97] curl_5.2.1                proxy_0.4-27             
- [99] cachem_1.1.0              rhdf5_2.48.0             
-[101] stringr_1.5.1             KernSmooth_2.23-24       
-[103] parallel_4.4.0            vipor_0.4.7              
-[105] AnnotationDbi_1.66.0      s2_1.1.6                 
-[107] pillar_1.9.0              grid_4.4.0               
-[109] vctrs_0.6.5               BiocSingular_1.20.0      
-[111] dbplyr_2.5.0              beachmat_2.20.0          
-[113] sfheaders_0.4.4           xtable_1.8-4             
-[115] cluster_2.1.6             beeswarm_0.4.0           
-[117] evaluate_0.23             zeallot_0.1.0            
-[119] tinytex_0.51              magick_2.8.3             
-[121] cli_3.6.2                 locfit_1.5-9.9           
-[123] compiler_4.4.0            rlang_1.1.3              
-[125] crayon_1.5.2              labeling_0.4.3           
-[127] classInt_0.4-10           ggbeeswarm_0.7.2         
-[129] stringi_1.8.4             deldir_2.0-4             
-[131] viridisLite_0.4.2         munsell_0.5.1            
-[133] Biostrings_2.72.0         tiff_0.1-12              
-[135] Matrix_1.7-0              sparseMatrixStats_1.16.0 
-[137] bit64_4.0.5               Rhdf5lib_1.26.0          
-[139] KEGGREST_1.44.0           statmod_1.5.0            
-[141] highr_0.11                igraph_2.0.3             
-[143] memoise_2.0.1             bslib_0.7.0              
-[145] bit_4.0.5                </code></pre>
+  [1] R.methodsS3_1.8.2         GSEABase_1.66.0          
+  [3] tiff_0.1-12               goftest_1.2-3            
+  [5] Biostrings_2.72.0         HDF5Array_1.32.0         
+  [7] vctrs_0.6.5               spatstat.random_3.2-3    
+  [9] digest_0.6.35             png_0.1-8                
+ [11] proxy_0.4-27              ggrepel_0.9.5            
+ [13] deldir_2.0-4              parallelly_1.37.1        
+ [15] magick_2.8.3              MASS_7.3-60.2            
+ [17] reshape2_1.4.4            scico_1.5.0              
+ [19] httpuv_1.6.15             foreach_1.5.2            
+ [21] withr_3.0.0               xfun_0.44                
+ [23] survival_3.6-4            memoise_2.0.1            
+ [25] s2_1.1.6                  ggbeeswarm_0.7.2         
+ [27] systemfonts_1.1.0         zoo_1.8-12               
+ [29] pbapply_1.7-2             R.oo_1.26.0              
+ [31] spData_2.3.1              KEGGREST_1.44.0          
+ [33] promises_1.3.0            SPARK_1.1.1              
+ [35] httr_1.4.7                globals_0.16.3           
+ [37] fitdistrplus_1.1-11       rhdf5filters_1.16.0      
+ [39] rhdf5_2.48.0              rstudioapi_0.16.0        
+ [41] UCSC.utils_1.0.0          units_0.8-5              
+ [43] miniUI_0.1.1.1            generics_0.1.3           
+ [45] curl_5.2.1                zlibbioc_1.50.0          
+ [47] ScaledMatrix_1.12.0       polyclip_1.10-6          
+ [49] GenomeInfoDbData_1.2.12   SparseArray_1.4.8        
+ [51] fftwtools_0.9-11          xtable_1.8-4             
+ [53] stringr_1.5.1             pracma_2.4.4             
+ [55] doParallel_1.0.17         evaluate_0.23            
+ [57] S4Arrays_1.4.1            BiocFileCache_2.12.0     
+ [59] bookdown_0.39             irlba_2.3.5.1            
+ [61] colorspace_2.1-0          filelock_1.0.3           
+ [63] ROCR_1.0-11               reticulate_1.37.0        
+ [65] spatstat.data_3.0-4       magrittr_2.0.3           
+ [67] lmtest_0.9-40             spdep_1.3-4              
+ [69] later_1.3.2               viridis_0.6.5            
+ [71] lattice_0.22-6            spatstat.geom_3.2-9      
+ [73] future.apply_1.11.2       scattermore_1.2          
+ [75] XML_3.99-0.16.1           cowplot_1.1.3            
+ [77] RcppAnnoy_0.0.22          class_7.3-22             
+ [79] pillar_1.9.0              nlme_3.1-164             
+ [81] iterators_1.0.14          EBImage_4.46.0           
+ [83] compiler_4.4.0            beachmat_2.20.0          
+ [85] stringi_1.8.4             sf_1.0-16                
+ [87] tensor_1.5                plyr_1.8.9               
+ [89] crayon_1.5.2              abind_1.4-5              
+ [91] locfit_1.5-9.9            sp_2.1-4                 
+ [93] terra_1.7-78              bit_4.0.5                
+ [95] dplyr_1.1.4               codetools_0.2-20         
+ [97] BiocSingular_1.20.0       openssl_2.2.0            
+ [99] bslib_0.7.0               e1071_1.7-14             
+[101] plotly_4.10.4             mime_0.12                
+[103] splines_4.4.0             Rcpp_1.0.12              
+[105] fastDummies_1.7.3         dbplyr_2.5.0             
+[107] sparseMatrixStats_1.16.0  blob_1.2.4               
+[109] utf8_1.2.4                listenv_0.9.1            
+[111] DelayedMatrixStats_1.26.0 rdist_0.0.5              
+[113] tibble_3.2.1              Matrix_1.7-0             
+[115] statmod_1.5.0             svglite_2.1.3            
+[117] pkgconfig_2.0.3           tools_4.4.0              
+[119] BRISC_1.0.5               cachem_1.1.0             
+[121] RSQLite_2.3.7             viridisLite_0.4.2        
+[123] DBI_1.2.2                 fastmap_1.2.0            
+[125] rmarkdown_2.27            scales_1.3.0             
+[127] grid_4.4.0                ica_1.0-3                
+[129] Seurat_5.1.0              sass_0.4.9               
+[131] BiocManager_1.30.23       dotCall64_1.1-1          
+[133] graph_1.82.0              RANN_2.6.1               
+[135] farver_2.1.2              wk_0.9.1                 
+[137] yaml_2.3.8                cli_3.6.2                
+[139] purrr_1.0.2               leiden_0.4.3.1           
+[141] lifecycle_1.0.4           askpass_1.2.0            
+[143] uwot_0.2.2                bluster_1.14.0           
+[145] DropletUtils_1.24.0       annotate_1.82.0          
+[147] gtable_0.3.5              rjson_0.2.21             
+[149] umap_0.2.10.0             ggridges_0.5.6           
+[151] progressr_0.14.0          parallel_4.4.0           
+[153] jsonlite_1.8.8            edgeR_4.2.0              
+[155] RcppHNSW_0.6.0            bitops_1.0-7             
+[157] bit64_4.0.5               Rtsne_0.17               
+[159] spatstat.utils_3.0-4      BiocNeighbors_1.22.0     
+[161] SeuratObject_5.0.2        matlab_1.0.4             
+[163] ggside_0.3.1              jquerylib_0.1.4          
+[165] highr_0.11                metapod_1.12.0           
+[167] dqrng_0.4.1               zeallot_0.1.0            
+[169] R.utils_2.12.3            lazyeval_0.2.2           
+[171] shiny_1.8.1.1             htmltools_0.5.8.1        
+[173] sctransform_0.4.1         tinytex_0.51             
+[175] glue_1.7.0                spam_2.10-0              
+[177] XVector_0.44.0            RCurl_1.98-1.14          
+[179] classInt_0.4-10           jpeg_0.1-10              
+[181] gridExtra_2.3             boot_1.3-30              
+[183] igraph_2.0.3              R6_2.5.1                 
+[185] tidyr_1.3.1               CompQuadForm_1.4.3       
+[187] labeling_0.4.3            cluster_2.1.6            
+[189] Rhdf5lib_1.26.0           memuse_4.2-3             
+[191] DelayedArray_0.30.1       tidyselect_1.2.1         
+[193] vipor_0.4.7               xml2_1.3.6               
+[195] AnnotationDbi_1.66.0      future_1.33.2            
+[197] sfheaders_0.4.4           rsvd_1.0.5               
+[199] munsell_0.5.1             KernSmooth_2.23-24       
+[201] data.table_1.15.4         htmlwidgets_1.6.4        
+[203] rlang_1.1.3               spatstat.sparse_3.0-3    
+[205] spatstat.explore_3.2-7    pdist_1.2.1              
+[207] ggnewscale_0.4.10         fansi_1.0.6              
+[209] beeswarm_0.4.0           </code></pre>
 </div>
-<div id="references" class="section level1" number="9">
-<h1><span class="header-section-number">9</span> References</h1>
+<div id="references" class="section level1" number="8">
+<h1><span class="header-section-number">8</span> References</h1>
 </div>
 
 

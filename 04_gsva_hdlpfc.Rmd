@@ -49,7 +49,9 @@ dim(spe.filt)
 cell_types <- readRDS(file.path("_processed_data", "cell_types.human_dlpfc.rds"))
 ```
 
-# Dimensionality reduction
+# Clustering
+
+## PCA Based Clustering
 
 Select a subset of top highly-variable genes (HVGs).
 
@@ -72,6 +74,8 @@ Select top 10% HVGs.
 top_hvgs <- getTopHVGs(dec, prop=0.1)
 length(top_hvgs)
 ```
+
+
 Calculate PCA.
 
 ```{r}
@@ -83,8 +87,6 @@ spe.filt <- runPCA(spe.filt, subset_row=top_hvgs)
 reducedDimNames(spe.filt)
 dim(reducedDim(spe.filt, "PCA"))
 ```
-
-# Clustering
 
 Here we perform a non-spatial graph-based clustering of the spots,
 targeting 7 clusters, which is the number of anatomically annotated
@@ -121,6 +123,38 @@ pltcl <- plotVisium(spe.filt, x_coord="pxl_col_in_fullres",
 (pltgt | pltcl)
 ```
 
+## SpatialPCA based clustering
+
+```{r,warning=FALSE,verbose=FALSE,message=FALSE}
+library(SpatialPCA)
+LIBD <- CreateSpatialPCAObject(counts=as.matrix(assays(spe.filt)$counts), location=spatialCoords(spe.filt), project = "SpatialPCA",gene.type="spatial",sparkversion="sparkx",numCores_spark=5, customGenelist=NULL,min.loctions = 20, min.features=20)
+
+```
+```{r}
+
+start_time <- Sys.time()
+LIBD = SpatialPCA_buildKernel(LIBD, kerneltype="gaussian", bandwidthtype="SJ",bandwidth.set.by.user=NULL)
+LIBD = SpatialPCA_EstimateLoading(LIBD,fast=FALSE,SpatialPCnum=20)
+LIBD = SpatialPCA_SpatialPCs(LIBD, fast=FALSE)
+end_time <- Sys.time()
+T = end_time - start_time
+T
+```
+
+```{r}
+clusterlabel= walktrap_clustering(clusternum=7,latent_dat=LIBD@SpatialPCs,knearest=70 ) 
+# for other Visium or ST data, the user can also set k nearest number as round(sqrt(dim(SpatialPCAobject@SpatialPCs)[2])) by default.
+clusterlabel_refine = refine_cluster_10x(clusterlabels=clusterlabel,location=LIBD@location,shape="hexagon")
+```
+
+```{r}
+cbp=c("#9C9EDE" ,"#5CB85C" ,"#E377C2", "#4DBBD5" ,"#FED439" ,"#FF9896", "#FFDC91")
+spclus <- plot_cluster(location=cbind(-spatialCoords(spe.filt)[,2],spatialCoords(spe.filt)[,1]),clusterlabel=clusterlabel_refine,pointsize=1.5 ,title_in=paste0("SpatialPCA clustering of Human DLPFC data"),color_in=cbp)
+spclus
+```
+
+
+
 # GSVA enrichment score estimation
 
 Run GSVA with default parameters.
@@ -130,12 +164,74 @@ library(GSVA)
 library(BiocParallel)
 
 gsvaPar <- gsvaParam(spe.filt, cell_types, assay="logcounts",
-                     minSize=5)
+                     minSize=5, kcdf = 'none')
 spe.filt.es <- gsva(gsvaPar, verbose=FALSE, BPPARAM=MulticoreParam(workers=3))
 dim(spe.filt.es)
 spe.filt.es
 ```
 
+
+# Spatially Variable Gene Sets
+
+
+```{r}
+library(nnSVG)
+
+#system.time(spe.nnsvg <- nnSVG(spe.filt[top_hvgs,], assay_name = "logcounts", BPPARAM=MulticoreParam(workers=4)))
+system.time(spe.nnsvg.es <-nnSVG(spe.filt.es, assay_name = "es", BPPARAM=MulticoreParam(workers=4)))
+```
+
+
+```{r}
+# number of significant SV Genes and Gene Sets
+#table(rowData(spe.nnsvg)$padj <= 0.05)
+table(rowData(spe.nnsvg.es)$padj <= 0.05)
+```
+
+```{r}
+#rowData(spe.nnsvg)[order(rowData(spe.nnsvg)$rank)[1:10], ]
+```
+
+```{r}
+rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[1:10], ]
+```
+Let's check how the genes in the most spatially variable gene sets behave.
+
+
+```{r}
+# Most spatially variable gene set
+
+for(j in 1:4){
+  gs <- as.character(unlist(rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[j], "gs"]))
+  svgset <- rownames(rowData(spe.nnsvg.es)[order(rowData(spe.nnsvg.es)$rank)[j], ])
+
+  print(paste("Length of the gene set",svgset,length(gs),"genes"))
+  gs <- gs[1:min(8,length(gs))]
+  
+ # df <- sapply(gs, function(g){
+  #  stat <- rowData(spe.nnsvg)[rowData(spe.nnsvg)$gene_id == g, ]
+   # stat
+  #})
+  #df <- do.call(rbind, df)
+  #print(head(df))
+  plts <- list()
+  i<-1
+  for (g in gs) {
+    plts[[svgset]] <- plotVisium(spe.filt.es, x_coord="pxl_col_in_fullres",
+                             y_coord="pxl_row_in_fullres", point_size=0.75,
+                             assay="es", annotate=svgset, facets=NULL) +
+                        ggtitle(svgset) + theme(plot.title=element_text(hjust=0.5)) +
+                        theme(legend.title=element_blank()) + labs(tag=letters[i])
+    plts[[g]] <- plotVisium(spe.filt, x_coord="pxl_col_in_fullres",
+                             y_coord="pxl_row_in_fullres", point_size=0.75,
+                             assay="logcounts", annotate=g, facets=NULL) +
+                        ggtitle(g) + theme(plot.title=element_text(hjust=0.5)) +
+                        theme(legend.title=element_blank()) + labs(tag=letters[i])
+    i <- i + 1
+  }
+  wrap_plots(plts, nrow=ceiling(length(plts)/2))
+}
+```
 # Moran's I estimation
 
 Here we calculate Moran's I for each gene set in the GSVA
@@ -151,25 +247,71 @@ vg <- findVisiumGraph(spe.filt.es,
                       zero.policy=TRUE)
 colGraph(sfe, "visium", sample_id="151673") <- vg
 
-moransi <- rowData(runUnivariate(sfe, type="moran.test", colGraphName="visium",
+moransi <- rowData(runUnivariate(sfe, type="moran.mc", nsim = 1000, colGraphName="visium",
                                  exprs_values="es", zero.policy=TRUE))
-moransi <- moransi[, 2:3]
+moransi <- moransi[, c(2,4)]
 colnames(moransi) <- c("statistic", "p.value")
 ```
 
 
-# Selection of autocorrelated gene sets
+## SFARI gene sets analysis
+Figure \@ref(fig:sfarigenesets) shows GSVA scores for SFARI gene sets.
+
+```{r sfarigenesets, echo=FALSE, message=FALSE, fig.height=10, fig.width=7, out.width="800px", dpi=100, fig.cap="GSVA scores for SFARI gene sets"}
+
+
+set.seed(123)
+
+plts_sfari <- list()
+for (gs in names(cell_types[c(96:98)])) {
+  plts_sfari[[gs]] <- plotVisium(spe.filt.es, x_coord="pxl_col_in_fullres",
+                           y_coord="pxl_row_in_fullres", point_size=0.75,
+                           assay="es", annotate=gs, facets=NULL) +
+                      ggtitle(gs) + theme(plot.title=element_text(hjust=0.5)) +
+                      theme(legend.title=element_blank()) + labs(tag=letters[i])
+  i <- i + 1
+}
+wrap_plots(plts_sfari, nrow=ceiling(length(plts)/2))
+```
+
+SFARI gene sets spatial autocorrelation
+
+```{r}
+moransi[names(cell_types[c(96:98)]),]
+```
+
+## Birnbaum gene sets analysis
+
+Figure \@ref(fig:birnbaumgenesets) shows GSVA scores for Birnbaum et al gene sets.
+
+```{r birnbaumgenesets, echo=FALSE, message=FALSE, fig.height=10, fig.width=7, out.width="800px", dpi=100, fig.cap="GSVA scores for Birnbaum et al gene sets."}
+
+
+set.seed(123)
+
+plts_birnbaum <- list()
+for (gs in names(cell_types[c(99:108)])) {
+  plts_birnbaum[[gs]] <- plotVisium(spe.filt.es, x_coord="pxl_col_in_fullres",
+                           y_coord="pxl_row_in_fullres", point_size=0.75,
+                           assay="es", annotate=gs, facets=NULL) +
+                      ggtitle(gs) + theme(plot.title=element_text(hjust=0.5)) +
+                      theme(legend.title=element_blank()) + labs(tag=letters[i])
+  i <- i + 1
+}
+wrap_plots(plts_birnbaum, nrow=ceiling(length(plts)/2))
+```
+
+```{r}
+moransi[names(cell_types[c(99:108)]),]
+
+```
+
+
+## Selection of autocorrelated gene sets
 
 Table \@ref(tab:gsbymoransi) below shows the subset of gene sets with
 significant nonzero Moran's I, in decreasing order, calculated from GSVA
 ES with default parameters.
-
-```{r}
-mask <- p.adjust(moransi$p.value, method="bonferroni") < 0.01
-sum(mask)
-moransi <- moransi[mask, ]
-dim(moransi)
-```
 
 ```{r gsbymoransi, echo=FALSE}
 ktab <- kable(moransi[order(moransi$statistic, decreasing=TRUE), ], "html",
@@ -185,7 +327,7 @@ significantly autocorrelated with a Bonferroni FWER < 0.01, and a minimum
 Moran's I value of 0.4.
 
 ```{r}
-sig.genesets <- rownames(moransi)[moransi$statistic > 40]
+sig.genesets <- rownames(moransi)[moransi$statistic > 0.4]
 spe.filt.es.sig <- spe.filt.es[rownames(spe.filt.es) %in% sig.genesets]
 dim(spe.filt.es.sig)
 ```
@@ -286,45 +428,8 @@ saveRDS(spe.filt.es,
 ```
 
 
-## Plot SFARI gene sets
-Figure \@ref(fig:sfarigenesets) shows GSVA scores for SFARI gene sets.
-
-```{r sfarigenesets, echo=FALSE, message=FALSE, fig.height=10, fig.width=7, out.width="800px", dpi=100, fig.cap="GSVA scores for SFARI gene sets"}
 
 
-set.seed(123)
-
-plts_sfari <- list()
-for (gs in names(cell_types[c(96:98)])) {
-  plts_sfari[[gs]] <- plotVisium(spe.filt.es, x_coord="pxl_col_in_fullres",
-                           y_coord="pxl_row_in_fullres", point_size=0.75,
-                           assay="es", annotate=gs, facets=NULL) +
-                      ggtitle(gs) + theme(plot.title=element_text(hjust=0.5)) +
-                      theme(legend.title=element_blank()) + labs(tag=letters[i])
-  i <- i + 1
-}
-wrap_plots(plts_sfari, nrow=ceiling(length(plts)/2))
-```
-## Plot Birnbaum gene sets
-
-Figure \@ref(fig:birnbaumgenesets) shows GSVA scores for Birnbaum et al gene sets.
-
-```{r birnbaumgenesets, echo=FALSE, message=FALSE, fig.height=10, fig.width=7, out.width="800px", dpi=100, fig.cap="GSVA scores for Birnbaum et al gene sets."}
-
-
-set.seed(123)
-
-plts_birnbaum <- list()
-for (gs in names(cell_types[c(99:108)])) {
-  plts_birnbaum[[gs]] <- plotVisium(spe.filt.es, x_coord="pxl_col_in_fullres",
-                           y_coord="pxl_row_in_fullres", point_size=0.75,
-                           assay="es", annotate=gs, facets=NULL) +
-                      ggtitle(gs) + theme(plot.title=element_text(hjust=0.5)) +
-                      theme(legend.title=element_blank()) + labs(tag=letters[i])
-  i <- i + 1
-}
-wrap_plots(plts_birnbaum, nrow=ceiling(length(plts)/2))
-```
 
 # Session information
 
